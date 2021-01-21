@@ -1,0 +1,224 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://autohome.ca/model/recipe.json",
+    "title": "Zone",
+    "description": "Zones",
+    "type": "object",
+    "exegesis-plugin-jsonschema-controller": "Zone",
+    "exegesis-plugin-jsonschema-id": "id",
+    "required": [ "name" ],
+    "properties": {
+        "id": { "type": "string", "readOnly": true },
+        "name": { "type": "string" },
+        "sensors": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "type": { "type": "string" },
+                    "reading": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                            "time": { "type": "string", "format": "date-time" },
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" },
+                            "data": { "type": "string" }
+                        }
+                    }
+                },
+                "required": [ "name", "type" ]
+            }
+        },
+        "schedules": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "days": { "type": "array", "items": { "type": "number", "min": 0, "max": 6 } },
+                    "start": { "type": "string", "pattern": "\\d{2}:\\d{2}" },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": { "type": "string" },
+                                "value": { "type": "number" },
+                                "unit": { "type": "string" },
+                                "config": { "type": "string" }
+                            },
+                            "required": [ "type", "value" ]
+                        }
+                    }
+                },
+                "required": [ "days", "start", "changes" ]
+            }
+        },
+        "overrides": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "start": { "type": "string", "format": "date-time" },
+                    "end": { "type": "string", "format": "date-time" },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": { "type": "string" },
+                                "value": { "type": "number" },
+                                "unit": { "type": "string" },
+                                "config": { "type": "string" }
+                            },
+                            "required": [ "type", "value" ]
+                        }
+                    }
+                },
+                "required": [ "start", "end", "changes" ]
+            }
+        },
+        "home": { "$ref": "home.json#/properties/id" }
+    },
+    "operations": {
+        "addSensorReading": {
+            "summary": "Add a new sensor reading",
+            "operationId": "addSensorReading",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "time": { "type": "string", "format": "date-time" },
+                    "sensor": { "type": "string" },
+                    "type": { "type": "string" },
+                    "value": { "type": "number" },
+                    "unit": { "type": "string" },
+                    "data": { "type": "string" }
+                },
+                required: [ "value" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "querySensorReadings": {
+            "summary": "Query sensor readings from the given time range",
+            "operationId": "querySensorReadings",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "start": { "type": "string", "format": "date-time" },
+                    "end": { "type": "string", "format": "date-time" },
+                    "sensor": { "type": "string" },
+                    "type": { "type": "string" }
+                },
+                required: [ "start", "end" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "readings": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "time": { "type": "string", "format": "date-time" },
+                                                "sensor": { "type": "string" },
+                                                "value": { "type": "number" },
+                                                "unit": { "type": "string" },
+                                                "data": { "type": "string" },
+                                                "type": { "type": "string" },
+                                                "home": { "type": "string" },
+                                                "zone": { "type": "string" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "addOverride": {
+            "summary": "Add a new override",
+            "operationId": "addOverride",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "start": { "type": "string", "format": "date-time" },
+                    "end": { "type": "string", "format": "date-time" },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": { "type": "string" },
+                                "value": { "type": "number" },
+                                "unit": { "type": "string" },
+                                "config": { "type": "string" }
+                            },
+                            "required": [ "type", "value" ]
+                        }
+                    }
+                },
+                "required": [ "name", "changes" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "cancelOverride": {
+            "summary": "Cancel one override (by name) or all overrides",
+            "operationId": "cancelOverride",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" }
+                }
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

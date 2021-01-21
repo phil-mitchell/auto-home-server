@@ -1,0 +1,122 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://autohome.ca/model/brewery.json",
+    "title": "Home",
+    "description": "Home",
+    "type": "object",
+    "exegesis-plugin-jsonschema-controller": "Home",
+    "exegesis-plugin-jsonschema-id": "id",
+    "properties": {
+        "id": { "type": "string", "readOnly": true },
+        "@editable": { "type": "boolean", "readOnly": true },
+        "name": { "type": "string" },
+        "zones": {
+            "type": "array",
+            "items": {
+                "$ref": "zone.json"
+            },
+            "readOnly": true
+        },
+        "members": {
+            "type": "array",
+            "items": {
+                "$ref": "member.json"
+            },
+            "readOnly": true
+        }
+    },
+    "operations": {
+        "inviteMember": {
+            "summary": "Invite a new member to the home",
+            "operationId": "inviteMember",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "email": { "type": "string", "format": "email" },
+                    "manager": { "type": "boolean" },
+                    "editor": { "type": "boolean" }
+                }
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "addOverride": {
+            "summary": "Add a new override to named (or all) zones in the home",
+            "operationId": "addOverride",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "zones": { "type": "array", "items": { "type": "string" } },
+                    "start": { "type": "string", "format": "date-time" },
+                    "end": { "type": "string", "format": "date-time" },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": { "type": "string" },
+                                "value": { "type": "number" },
+                                "unit": { "type": "string" },
+                                "config": { "type": "string" }
+                            },
+                            "required": [ "type", "value" ]
+                        }
+                    }
+                },
+                "required": [ "name", "changes" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "cancelOverride": {
+            "summary": "Cancel one override (by name) or all overrides for named (or all) zones in the home",
+            "operationId": "cancelOverride",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "zones": { "type": "array", "items": { "type": "string" } }
+                }
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

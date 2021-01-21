@@ -1,0 +1,22 @@
+base_url: "http://samplehost:443"
+jwt_secret: samplesecret
+
+authentication:
+  google:
+    clientId: myclientid.apps.googleusercontent.com
+    clientSecret: myclientsecret
+    authorization:
+      access_type: offline
+      prompt: consent
+      scope:
+        - email
+        - profile
+
+rethinkdb:
+  port: 32769
+
+influx:
+  hostname: localhost
+  port: 8086
+  database: 'autohome_db'
+  

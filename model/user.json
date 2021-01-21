@@ -1,0 +1,94 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://autohome.ca/model/user.json",
+    "title": "User",
+    "description": "Home users",
+    "type": "object",
+    "readOnly": true,
+    "exegesis-plugin-jsonschema-controller": "User",
+    "exegesis-plugin-jsonschema-id": "id",
+    "properties": {
+        "id": { "type": "string", "readOnly": true },
+        "name": { "type": "string" },
+        "read_only": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "email": {
+            "type": "array",
+            "items": { "type": "string", "format": "email" }
+        },
+        "image": { "type": "string", "format": "uri" },
+        "memberships": {
+            "type": "array",
+            "items": {
+                "$ref": "member.json"
+            },
+            "readOnly": true
+        },
+        "api_keys": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                }
+            }
+        }
+    },
+    "operations": {
+        "addAPIKey": {
+            "summary": "Add a new API key for the user",
+            "operationId": "addAPIKey",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" }
+                },
+                "required": [ "name" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": { "type": "string" },
+                                    "user": { "type": "string" },
+                                    "name": { "type": "string" },
+                                    "value": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "revokeAPIKey": {
+            "summary": "Revoke an API key for the user",
+            "operationId": "revokeAPIKey",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" }
+                },
+                "required": [ "name" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}

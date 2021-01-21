@@ -1,0 +1,35 @@
+{
+  "name": "auto-home-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "createdb": "rethinkdb create --config-file ./config/rethinkdb.conf",
+    "startdb": "rethinkdb serve --config-file ./config/rethinkdb.conf"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ui5/webcomponents": "^1.0.0-rc.11",
+    "@ui5/webcomponents-fiori": "^1.0.0-rc.11",
+    "body-parser": "^1.19.0",
+    "config": "^3.3.3",
+    "es-module-shims": "^0.8.0",
+    "exegesis-express": "^2.0.0",
+    "exegesis-passport": "^2.0.1",
+    "exegesis-plugin-clientapi": "^1.1.1",
+    "exegesis-plugin-context": "^1.0.2",
+    "exegesis-plugin-google-oauth2": "^1.0.8",
+    "exegesis-plugin-jsonschema": "^1.2.0",
+    "exegesis-plugin-swagger-ui-express": "^1.0.8",
+    "express": "^4.17.1",
+    "influx": "^5.6.3",
+    "jsonpath-plus": "^5.0.2",
+    "jsonwebtoken": "^8.5.1",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "rethinkdbdash": "^2.3.31",
+    "semver": "^7.3.4"
+  }
+}

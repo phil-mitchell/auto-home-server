@@ -1,0 +1,52 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://autohome.ca/model/brewery.json",
+    "title": "Member",
+    "description": "Members",
+    "type": "object",
+    "readOnly": true,
+    "exegesis-plugin-jsonschema-id": "id",
+    "properties": {
+        "id": { "type": "string", "readOnly": true },
+        "joined": { "type": "string", "format": "date" },
+        "active": { "type": "boolean", "readOnly": true },
+        "manager": { "type": "boolean" },
+        "editor": { "type": "boolean" },
+        "home": {
+            "oneOf": [
+                { "$ref": "home.json#/properties/id" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "$ref": "home.json#/properties/id" },
+                        "name": { "$ref": "home.json#/properties/name" }
+                    }
+                }
+            ],
+            "readOnly": true
+        },
+        "user": {
+            "oneOf": [
+                { "$ref": "user.json#/properties/id" },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": { "$ref": "user.json#/properties/id" },
+                        "name": { "$ref": "user.json#/properties/name" },
+                        "image":  { "$ref": "user.json#/properties/image" }
+                    }
+                }
+                    
+            ],
+            "readOnly": true
+        }
+    },
+    "operations": {
+        "activate": {
+            "summary": "Activate this member of the home",
+            "schema": {},
+            "responses": {}
+        }
+    },
+    "exegesis-plugin-jsonschema-controller": "Member"
+}

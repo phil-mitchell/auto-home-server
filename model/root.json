@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://autohome.ca/model/brewing.json",
+    "title": "Root",
+    "description": "Home API model",
+    "type": "object",
+    "exegesis-plugin-jsonschema-controller": "Root",
+    "properties": {
+        "users": {
+            "type": "array",
+            "items": { "$ref": "user.json" }
+        },
+        "user": {
+            "$ref": "user.json"
+        },
+        "homes": {
+            "type": "array",
+            "items": { "$ref": "home.json" }
+        }
+    }
+}
