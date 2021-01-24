@@ -1,0 +1,8 @@
+<ui5-card class="medium" data-heading="name" header-interactive>
+  <img src="./img/zone.png" slot="avatar" />
+</ui5-card>
+<template id="sensor-template">
+  <p data-bind="name"></p>
+  <p>Reading: <span data-bind="reading.value"></span> <span data-bind="reading.unit"></span>
+  <p>Time: <span data-bind="reading.time"></span>
+</template>

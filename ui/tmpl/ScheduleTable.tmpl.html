@@ -1,0 +1,44 @@
+<ui5-table show-no-data no-data-text="No Data">
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Start time</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Days</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Changes</ui5-table-column>
+</ui5-table>
+
+<template id="delete-button-template">
+  <ui5-button
+    data-disabled="@readonly"
+    style="vertical-align:middle"
+    id="delete-button" icon="delete" design="Negative"></ui5-button>
+</template>
+
+<template id="table-row-template">
+  <ui5-table-row>
+    <ui5-table-cell>
+      <span id="delete-button-slot"></span>
+      <ui5-time-picker
+        id="time-input"
+        input-width="20"
+        format-pattern="HH:mm"
+        data-value="start"
+        data-readonly="@readonly">
+      </ui5-time-picker>
+    </ui5-table-cell>
+    <ui5-table-cell style="white-space: nowrap">
+      <dow-picker
+        id="dow-input"
+        style="width:fit-content"
+        data-days="days"
+        data-readonly="@readonly">
+      </dow-picker>
+    </ui5-table-cell>
+    <ui5-table-cell>
+      <schedule-changes-input
+        id="changes-input"
+        style="width:fit-content"
+        data-changes="changes"
+        readonly
+        data-show-value-help-icon="@editable">
+      </schedule-changes-iput>
+    </ui5-table-cell>
+  </ui5-table-row>
+</template>

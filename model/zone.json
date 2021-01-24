@@ -10,25 +10,47 @@
     "properties": {
         "id": { "type": "string", "readOnly": true },
         "name": { "type": "string" },
-        "sensors": {
+        "devices": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
                     "type": { "type": "string" },
-                    "reading": {
+                    "direction": { "type": "string", "enum": [ "input", "output", "in/out" ] },
+                    "data": { "type": "string" },
+                    "current": {
                         "readOnly": true,
                         "type": "object",
                         "properties": {
                             "time": { "type": "string", "format": "date-time" },
-                            "value": { "type": "number" },
-                            "unit": { "type": "string" },
+                            "value": {
+                                "type": "object",
+                                "properties": {
+                                    "value": { "type": "number" },
+                                    "unit": { "type": "string" }
+                                }
+                            },
+                            "data": { "type": "string" }
+                        }
+                    },
+                    "target": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                            "until": { "type": "string", "format": "date-time" },
+                            "value": {
+                                "type": "object",
+                                "properties": {
+                                    "value": { "type": "number" },
+                                    "unit": { "type": "string" }
+                                }
+                            },
                             "data": { "type": "string" }
                         }
                     }
                 },
-                "required": [ "name", "type" ]
+                "required": [ "name", "type", "direction" ]
             }
         },
         "schedules": {
@@ -43,12 +65,17 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "type": { "type": "string" },
-                                "value": { "type": "number" },
-                                "unit": { "type": "string" },
-                                "config": { "type": "string" }
+                                "device": { "type": "string" },
+                                "value": {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": { "type": "number" },
+                                        "unit": { "type": "string" }
+                                    }
+                                },
+                                "data": { "type": "string" }
                             },
-                            "required": [ "type", "value" ]
+                            "required": [ "device", "value" ]
                         }
                     }
                 },
@@ -68,12 +95,17 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "type": { "type": "string" },
-                                "value": { "type": "number" },
-                                "unit": { "type": "string" },
-                                "config": { "type": "string" }
+                                "device": { "type": "string" },
+                                "value": {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": { "type": "number" },
+                                        "unit": { "type": "string" }
+                                    }
+                                },
+                                "data": { "type": "string" }
                             },
-                            "required": [ "type", "value" ]
+                            "required": [ "device", "value" ]
                         }
                     }
                 },
@@ -140,8 +172,13 @@
                                             "properties": {
                                                 "time": { "type": "string", "format": "date-time" },
                                                 "sensor": { "type": "string" },
-                                                "value": { "type": "number" },
-                                                "unit": { "type": "string" },
+                                                "value": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": { "type": "number" },
+                                                        "unit": { "type": "string" }
+                                                    }
+                                                },
                                                 "data": { "type": "string" },
                                                 "type": { "type": "string" },
                                                 "home": { "type": "string" },
@@ -170,16 +207,21 @@
                         "items": {
                             "type": "object",
                             "properties": {
-                                "type": { "type": "string" },
-                                "value": { "type": "number" },
-                                "unit": { "type": "string" },
-                                "config": { "type": "string" }
+                                "device": { "type": "string" },
+                                "value": {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": { "type": "number" },
+                                        "unit": { "type": "string" }
+                                    }
+                                },
+                                "data": { "type": "string" }
                             },
-                            "required": [ "type", "value" ]
+                            "required": [ "device", "value" ]
                         }
                     }
                 },
-                "required": [ "name", "changes" ]
+                "required": [ "start", "end", "changes" ]
             },
             "responses": {
                 "200": {

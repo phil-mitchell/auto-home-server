@@ -2,6 +2,7 @@
 
 const UserController = require( './User' );
 const MemberController = require( './Member' );
+const Influx = require( 'influx' );
 
 const ACCESS_READ_ONLY = Symbol( 'ReadOnlyAccess' );
 const ACCESS_EDIT = Symbol( 'EditAccess' );
@@ -154,7 +155,7 @@ module.exports = class HomeController {
 
     static async formatResponse( reqContext, value ) {
         let operationName = reqContext.requestObjectPath[reqContext.requestObjectPath.length-1];
-        if( operationName === 'addOverride' || operationName === 'cancelOverride' ) {
+        if( operationName === 'addOverride' || operationName === 'cancelOverride' || operationName === 'querySensorReadings' ) {
             const ZoneController = require( './Zone' );
             return ZoneController.formatResponse( reqContext, value );
         }
@@ -189,7 +190,7 @@ module.exports = class HomeController {
 
             const ZoneController = require( './Zone' );
 
-            let zones = ZoneController.find( reqContext, reqContext.requestBody.zones );
+            let zones = await ZoneController.find( reqContext, reqContext.requestBody.zones );
             let res = true;
             for( let zone of zones ) {
                 reqContext.home.zone = zone;
@@ -197,6 +198,34 @@ module.exports = class HomeController {
             }
 
             return res;
+        } else if( operationName === 'querySensorReadings' ) {
+            let home = await this.getRequestHome( reqContext, ACCESS_READ_ONLY );
+
+            let influx = reqContext.extraContext.store.influx;
+            let filter = reqContext.requestBody;
+
+            let query = `select * from sensor_readings where ` +
+                `time >= ${Influx.escape.stringLit( filter.start )} and ` +
+                `time <= ${Influx.escape.stringLit( filter.end )} and ` +
+                `home = ${Influx.escape.stringLit( home.id )}`;
+
+            if( filter.sensor ) {
+                query = `${query} and sensor = ${Influx.escape.stringLit( filter.sensor )}`;
+            }
+
+            if( filter.type ) {
+                query = `${query} and type = ${Influx.escape.stringLit( filter.type )}`;
+            }
+
+            query = `${query} order by time asc`;
+
+            return{ readings: ( await influx.query( query ) ).map( r => {
+                r.value = {
+                    value: r.value,
+                    unit: r.unit
+                };
+                delete r.unit;
+            }) };
         }
         
         let home = await this.getRequestHome( reqContext, ACCESS_MANAGE );

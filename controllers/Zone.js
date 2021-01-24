@@ -2,6 +2,7 @@
 
 const HomeController = require( './Home' );
 const Influx = require( 'influx' );
+const strftime = require( 'strftime' );
 
 module.exports = class ZoneController {
     static async getRequestZone( reqContext, need_write ) {
@@ -34,7 +35,7 @@ module.exports = class ZoneController {
         let db = reqContext.extraContext.store.db;
         let zones = db.table( 'zones' );
 
-        if( ( nameFilter || [] ).length > 0 ) {
+        if( ( nameFilter || [] ).length > 0 && nameFilter[0] !== 'all' ) {
             zones = zones.filter(
                 zone => reqContext.extraContext.store.r.expr( nameFilter ).contains( zone( 'name' ) )
             );
@@ -58,6 +59,14 @@ module.exports = class ZoneController {
         delete reqContext.requestBody.id;
         delete reqContext.requestBody['@etag'];
 
+        if( reqContext.requestBody.sensors ) {
+            for( let sensor of reqContext.requestBody.sensors ) {
+                delete sensor.reading;
+            }
+        }
+
+        delete reqContext.requestBody.targets;
+
         let res = await zones.insert( reqContext.requestBody, { returnChanges: true }).run();
         return res.changes[0].new_val;
     }
@@ -73,9 +82,10 @@ module.exports = class ZoneController {
         let db = reqContext.extraContext.store.db;
         let zones = db.table( 'zones' );
 
-        if( reqContext.requestBody.sensors ) {
-            for( let sensor of reqContext.requestBody.sensors ) {
-                delete sensor.reading;
+        if( reqContext.requestBody.devices ) {
+            for( let device of reqContext.requestBody.devices ) {
+                delete device.current;
+                delete device.target;
             }
         }
 
@@ -92,14 +102,78 @@ module.exports = class ZoneController {
         return zones.get( zone.id ).delete().run();
     }
 
+    static computeCurrentTargets( zone ) {
+        zone.schedules = zone.schedules || [];
+        zone.schedules.sort( ( a, b ) => {
+            return a.start.localeCompare( b.start );
+        });
+
+        zone.overrides = zone.overrides || [];
+        zone.overrides.sort( ( a, b ) => {
+            return a.start.localeCompare( b.start );
+        });
+
+        let targets = {};
+
+        let now = new Date();
+        let day = now.getDay();
+
+        let strftimeLocal = strftime.timezone( '-0500' );
+        let time = strftimeLocal( '%H:%M', now );
+        console.log( `Current time is ${time}` );
+
+        for( let schedule of zone.schedules ) {
+            if( schedule.days.indexOf( now.getDay() ) > -1 ) {
+                for( let change of schedule.changes ) {
+                    let scheduleStart = new Date( now );
+                    scheduleStart.setUTCHours( Number( schedule.start.split( ':' )[0] ) + 5 );
+                    scheduleStart.setMinutes( Number( schedule.start.split( ':' )[1] ) );
+                    scheduleStart.setSeconds( 0 );
+                    scheduleStart.setMilliseconds( 0 );
+                    
+                    if( schedule.start <= time ) {
+                        console.log( `Found past schedule starting at ${schedule.start}; setting ${change.device} to ${JSON.stringify( change )} until ${scheduleStart.toISOString()}` );
+                        targets[change.device] = JSON.parse( JSON.stringify( change ) );
+                        targets[change.device].until = new Date( now );
+                        targets[change.device].until.setUTCHours( 23 + 5 );
+                        targets[change.device].until.setMinutes( 59 );
+                        targets[change.device].until.setSeconds( 59 );
+                        targets[change.device].until.setMilliseconds( 999 );
+                    } else if( targets[change.device] && targets[change.device].until > scheduleStart ) {
+                        console.log( `Found future schedule starting at ${schedule.start}; setting ${change.device} until ${scheduleStart.toISOString()}` );
+                        targets[change.device].until = scheduleStart;
+                    }
+                }
+            }
+        }
+
+        for( let override of zone.overrides ) {
+            for( let change of override.changes ) {
+                let overrideStart = new Date( override.start );
+                let overrideEnd = new Date( override.end );
+
+                if( overrideStart <= now && overrideEnd >= now ) {
+                    targets[change.device] = JSON.parse( JSON.stringify( change ) );
+                    targets[change.device] = override.end;
+                } else if( overrideStart > now && targets[change.device] && targets[change.device].until > overrideStart ) {
+                    targets[change.device].until = overrideStart;
+                }
+            }
+        }
+
+        for( let device of zone.devices ) {
+            device.target = targets[device.name] || {};
+        }
+    }
+
     static async formatResponse( reqContext, value ) {
         if( typeof( value ) === 'object' && !value['@etag'] ) {
             delete value['@etag'];
             value['@etag'] = reqContext.extraContext.store.etag( value );
         }
 
-        if( typeof( value ) === 'object' && value.sensors ) {
-            for( let sensor of value.sensors ) {
+        if( typeof( value ) === 'object' && value.devices ) {
+            for( let device of value.devices ) {
                 let home = reqContext.home.home;
 
                 let influx = reqContext.extraContext.store.influx;
@@ -108,11 +182,22 @@ module.exports = class ZoneController {
                 let query = `select time, value, unit, data from sensor_readings where ` +
                     `home = ${Influx.escape.stringLit( home.id )} and ` +
                     `zone = ${Influx.escape.stringLit( value.id )} and ` +
-                    `sensor = ${Influx.escape.stringLit( sensor.name )} ` +
+                    `sensor = ${Influx.escape.stringLit( device.name )} ` +
                     `order by time desc limit 1`;
 
-                sensor.reading = ( await influx.query( query ) )[0];
+                device.current = ( await influx.query( query ) )[0] || {};
+                if( device.current.value != null ) {
+                    device.current.value = {
+                        value: device.current.value,
+                        unit: device.current.unit
+                    };
+                    delete device.current.unit;
+                }
             }
+        }
+
+        if( typeof( value ) === 'object' && ( value.schedules || value.overrides ) ) {
+            this.computeCurrentTargets( value );
         }
         return value;
     }
@@ -137,6 +222,9 @@ module.exports = class ZoneController {
         }
 
         let nextStart = new Date( now );
+        nextStart.setSeconds( 0 );
+        nextStart.setMilliseconds( 0 );
+
         if( !schedule ) {
             // no schedule; return end of current day
             nextStart.setHours( 23 );
@@ -182,10 +270,12 @@ module.exports = class ZoneController {
             let home = reqContext.home.home;
 
             let name = reqContext.requestBody.name;
+            let overrides = name ? ( zone.overrides || [] ).filter(
+                override => override.name !== name
+            ) : [];
+
             await zones.get( zone.id ).update({
-                overrides: ( zone.overrides || [] ).filter(
-                    override => override.name !== name
-                )
+                overrides: overrides
             }).run();
             return true;
         } else if( operationName === 'addSensorReading' ) {
@@ -238,7 +328,13 @@ module.exports = class ZoneController {
 
             query = `${query} order by time asc`;
 
-            return{ readings: await influx.query( query ) };
+            return{ readings: ( await influx.query( query ) ).map( r => {
+                r.value = {
+                    value: r.value,
+                    unit: r.unit
+                };
+                delete r.unit;
+            }) };
         }
 
         throw new Error( `Unknown operation ${operationName}` );

@@ -1,0 +1,53 @@
+<ui5-table show-no-data no-data-text="No Data">
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Start date</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">End date</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Name</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Changes</ui5-table-column>
+</ui5-table>
+
+<template id="delete-button-template">
+  <ui5-button
+    data-disabled="@readonly"
+    style="vertical-align:middle"
+    id="delete-button" icon="delete" design="Negative"></ui5-button>
+</template>
+
+<template id="table-row-template">
+  <ui5-table-row>
+    <ui5-table-cell>
+      <span id="delete-button-slot"></span>
+      <local-datetime-picker
+        id="start-input"
+        format-pattern="yyyy-MM-dd HH:mm:ss"
+        data-isotime="start"
+        data-readonly="@readonly">
+      </local-datetime-picker>
+    </ui5-table-cell>
+    <ui5-table-cell>
+      <span id="delete-button-slot"></span>
+      <local-datetime-picker
+        id="end-input"
+        format-pattern="yyyy-MM-dd HH:mm:ss"
+        data-isotime="end"
+        data-readonly="@readonly">
+      </local-datetime-picker>
+    </ui5-table-cell>
+    <ui5-table-cell style="white-space: nowrap">
+      <ui5-input
+        id="name-input"
+        style="width:fit-content"
+        data-value="name"
+        data-readonly="@readonly">
+      </dow-picker>
+    </ui5-table-cell>
+    <ui5-table-cell>
+      <schedule-changes-input
+        id="changes-input"
+        style="width:fit-content"
+        data-changes="changes"
+        readonly
+        data-show-value-help-icon="@editable">
+      </schedule-changes-iput>
+    </ui5-table-cell>
+  </ui5-table-row>
+</template>

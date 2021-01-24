@@ -1,0 +1,73 @@
+<ui5-panel fixed>
+  <div slot="header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <ui5-title>Details</ui5-title>
+    <div>
+      <ui5-togglebutton design="Default" icon="unlocked" id="edit-button" style="vertical-align: middle">Edit</ui5-togglebutton>
+      <ui5-button icon="delete" design="Negative" id="delete-button" style="vertical-align: middle">Remove home</ui5-button>
+      <ui5-button icon="refresh" id="refresh-button" style="vertical-align: middle">Refresh</ui5-button>
+    </div>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="home-name" show-colon>Home name</ui5-label>
+    <ui5-input style="vertical-align: middle" id="home-name" data-value="name" data-readonly="@readonly"></ui5-input>
+  </div>
+  <div>
+    <ui5-label for="home-notes">Notes: </ui5-label>
+    <ui5-textarea id="home-notes" placeholder="Notes" data-value="notes" rows="5" data-readonly="@readonly"></ui5-textarea>
+  </div>
+</ui5-panel>
+<ui5-tabcontainer class="full-width" fixed show-overflow>
+  <ui5-tab text="Zones" id="zones-panel" selected>
+    <ui5-bar design="Subheader">
+      <ui5-input id="zone-search" placeholder="Filter by name..." style="width: 100%" slot="startContent">
+	<ui5-icon id="searchIcon" slot="icon" name="search"></ui5-icon>
+      </ui5-input>
+      <ui5-button design="Default" icon="add" id="add-zone-button" slot="endContent">New zone</ui5-button>
+    </ui5-bar>
+  </ui5-tab>
+  <ui5-tab text="Members" id="members-panel">
+    <ui5-bar design="Subheader">
+      <ui5-input id="member-search" placeholder="Filter by name..." style="width: 100%" slot="startContent">
+	<ui5-icon id="searchIcon" slot="icon" name="search"></ui5-icon>
+      </ui5-input>
+      <ui5-button design="Default" icon="add" id="add-member-button"
+      slot="endContent">Invite member</ui5-button>
+    </ui5-bar>
+  </ui5-tab>
+</ui5-tabcontainer>
+
+<ui5-responsive-popover id="add-zone-popover" header-text="New zone">
+  <div class="popover-content">
+    <div class="messages">
+    </div>
+    <div class="flex-column">
+      <ui5-label for="nameInput" required>Name: </ui5-label>
+      <ui5-input id="nameInput" placeholder="name"></ui5-input>
+    </div>
+  </div>
+  <div slot="footer" class="popover-footer">
+    <ui5-button id="add-zone-popover-submit" design="Emphasized">Add</ui5-button>
+  </div>
+</ui5-responsive-popover>
+<template id="zone-template">
+  <autohome-zone-card data-zone="$" data-heading="name" style="height:fit-content" header-interactive></autohome-zone-card>
+</template>
+
+<ui5-responsive-popover id="add-member-popover" header-text="Invite member">
+  <div class="popover-content">
+    <div class="messages">
+    </div>
+    <div class="flex-column">
+      <ui5-label for="emailInput" required>Email: </ui5-label>
+      <ui5-input id="emailInput" placeholder="email"></ui5-input>
+    </div>
+  </div>
+  <div slot="footer" class="popover-footer">
+    <ui5-button id="add-member-popover-submit" design="Emphasized">Invite</ui5-button>
+  </div>
+</ui5-responsive-popover>
+<template id="member-template">
+  <ui5-card class="medium" data-heading="user.name" data-subheading="user.email[0]" header-interactive>
+    <img data-src="user.image" slot="avatar" />
+  </ui5-card>
+</template>

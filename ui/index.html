@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <title>AutoHome</title>
+    <link rel="icon" href="./img/favicon.ico">
+    <script defer src="./modules/es-module-shims/dist/es-module-shims.min.js"></script>
+    <script type="importmap-shim">
+      {
+        "imports": {
+          "@ui5/": "./modules/@ui5/",
+          "lit-html/": "./modules/lit-html/",
+          "jsonpath-plus/": "./modules/jsonpath-plus/",
+          "chart.js/": "./modules/chart.js/",
+          "chartjs-gauge/": "./modules/chartjs-gauge/",
+          "chartjs-plugin-datalabels/": "./modules/chartjs-plugin-datalabels/"
+        }
+      }
+    </script>
+
+    <script src="js/autohome.js" type="module-shim"></script>
+
+    <script data-ui5-config type="application/json">
+      {
+        "compactSize": true,
+        "noConflict": {
+          "events": ["selectionChange", "headerClick"]
+        }
+      }
+    </script>
+
+  </head>
+  <body>
+    <autohome-app></autohome-app>
+  </body>
+</html>

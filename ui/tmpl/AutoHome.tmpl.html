@@ -1,0 +1,49 @@
+<ui5-shellbar
+  id="shellbar"
+  primary-title="AutoHome"
+  logo="./img/favicon.ico"
+  >
+  <ui5-avatar id="profile" slot="profile" image="./img/guest.png"></ui5-avatar>
+  <ui5-button id="back-button" icon="nav-back" slot="startButton"></ui5-button>
+</ui5-shellbar>
+<ui5-popover id="user-menu" placement-type="Bottom">
+  <div class="popover-header">
+    <ui5-title style="padding: 0.25rem 1rem 0rem 1rem"><span data-bind="name"/></ui5-title>
+  </div>
+
+  <div class="popover-content">
+    <ui5-list separators="None" >
+      <ui5-li id="settings-button" icon="settings">Settings</ui5-li>
+      <ui5-li id="logout-button" icon="log">Sign out</ui5-li>
+    </ui5-list>
+  </div>
+</ui5-popover>
+<ui5-popover id="auth-menu" placement-type="Bottom">
+  <div class="popover-content">
+    <button id="auth-google" type="image" name="Google"
+            style="background: url(./img/btn_google_signin_light_normal_web.png); width: 191px;
+                   height: 46px"
+            />
+  </div>
+</ui5-popover>
+<slot name="messages"></slot>
+<slot></slot>
+
+<template id="page-autohome-home-template">
+  <ui5-list>
+  </ui5-list>
+</template>
+
+<template id="page-autohome-home-editor-template">
+  <autohome-home-editor />
+</template>
+
+<template id="page-autohome-zone-editor-template">
+  <autohome-zone-editor />
+</template>
+
+<template id="card-home-template">
+  <ui5-card class="medium" data-heading="name" header-interactive>
+    <img src="./img/home.png" slot="avatar" />
+  </ui5-card>
+</template>
