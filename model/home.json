@@ -87,6 +87,13 @@
                                                         "unit": { "type": "string" }
                                                     }
                                                 },
+                                                "target": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": { "type": "number" },
+                                                        "unit": { "type": "string" }
+                                                    }
+                                                },
                                                 "data": { "type": "string" },
                                                 "type": { "type": "string" },
                                                 "home": { "type": "string" },

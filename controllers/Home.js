@@ -238,12 +238,19 @@ module.exports = class HomeController {
                     value: r.value,
                     unit: r.unit
                 };
+                if( r.target != null ) {
+                    r.target = {
+                        value: r.target,
+                        unit: r.unit
+                    };
+                }
                 delete r.unit;
                 try {
                     r.data = JSON.parse( r.data || '{}' );
                 } catch( e ) {
                     r.data = {};
                 }
+                return r;
             }) };
         }
         

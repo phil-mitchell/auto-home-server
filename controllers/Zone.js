@@ -319,6 +319,7 @@ module.exports = class ZoneController {
                 },
                 fields: {
                     value: Number( reading.value.value ),
+                    target: reading.target && Number( reading.target.value ),
                     unit: reading.value.unit || '',
                     data: JSON.stringify( reading.data || '{}' )
                 },
@@ -353,12 +354,19 @@ module.exports = class ZoneController {
                     value: r.value,
                     unit: r.unit
                 };
+                if( r.target != null ) {
+                    r.target = {
+                        value: r.target,
+                        unit: r.unit
+                    };
+                }
                 delete r.unit;
                 try {
                     r.data = JSON.parse( r.data || '{}' );
                 } catch( e ) {
                     r.data = {};
                 }
+                return r;
             }) };
         }
 

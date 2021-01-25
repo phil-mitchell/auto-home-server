@@ -75,10 +75,9 @@ class AutoHomeDeviceTable extends HTMLElement {
 
     async addDevice() {
         ( this.devices || [] ).push({
-            start: new Date(),
-            end: new Date(),
             name: 'new device',
-            changes: []
+            type: 'on-off',
+            direction: 'output'
         });
 
         await clientAPI.saveZone();

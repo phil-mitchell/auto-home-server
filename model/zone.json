@@ -167,6 +167,15 @@
                         "required": [ "value" ],
                         "additionalProperties": false
                     },
+                    "target": {
+                        "type": "object",
+                        "properties": {
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" }
+                        },
+                        "required": [ "value" ],
+                        "additionalProperties": false
+                    },
                     "data": { "type": "object" }
                 },
                 "required": [ "sensor", "value" ],
@@ -215,6 +224,13 @@
                                                 "time": { "type": "string", "format": "date-time" },
                                                 "sensor": { "type": "string" },
                                                 "value": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": { "type": "number" },
+                                                        "unit": { "type": "string" }
+                                                    }
+                                                },
+                                                "target": {
                                                     "type": "object",
                                                     "properties": {
                                                         "value": { "type": "number" },

@@ -1,0 +1,13 @@
+{
+  "name": "AutoHome",
+  "short_name": "AutoHome",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "Automation for the home.",
+  "icons": [{
+    "src": "img/home/png",
+    "sizes": "550x550",
+    "type": "image/png"
+  }]
+}

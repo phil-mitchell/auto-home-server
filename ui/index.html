@@ -2,6 +2,7 @@
   <head>
     <title>AutoHome</title>
     <link rel="icon" href="./img/favicon.ico">
+    <link rel="manifest" href="manifest.json">
     <script defer src="./modules/es-module-shims/dist/es-module-shims.min.js"></script>
     <script type="importmap-shim">
       {
@@ -27,8 +28,17 @@
       }
     </script>
 
+    <style>
+      .ui5-tc__contentItem {
+         overflow:visible;
+      }
+      .ui5-tc-root.ui5-tc--textOnly .ui5-tc__content {
+        height: fit-content;
+      }
+    </style>
+    
   </head>
-  <body style="position:fixed; left: 0; right: 0; top: 0; bottom: 0">
+  <body>
     <autohome-app></autohome-app>
   </body>
 </html>

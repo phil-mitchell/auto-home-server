@@ -45,6 +45,7 @@ class Model {
                     measurement: 'sensor_readings',
                     fields: {
                         value: Influx.FieldType.FLOAT,
+                        target: Influx.FieldType.FLOAT,
                         unit: Influx.FieldType.STRING,
                         data: Influx.FieldType.STRING
                     },
