@@ -10,6 +10,8 @@ import "@ui5/webcomponents/dist/ResponsivePopover.js";
 
 import './ChangesInput.js';
 import './LocalDateTimePicker.js';
+import './BindableSelect.js';
+import './QuantityLabel.js';
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -17,7 +19,7 @@ import Quantity from './Quantity.js';
 
 var template = null;
 
-class AutoHomeOverrideTable extends HTMLElement {
+class AutoHomeDeviceTable extends HTMLElement {
     constructor() {
         super();
 
@@ -26,7 +28,7 @@ class AutoHomeOverrideTable extends HTMLElement {
 
     async connectedCallback() {
         if( !template ) {
-            template = await ( await fetch( './tmpl/OverrideTable.tmpl.html' ) ).text();
+            template = await ( await fetch( './tmpl/DeviceTable.tmpl.html' ) ).text();
         }
         this.shadow.innerHTML = template;
 
@@ -40,15 +42,6 @@ class AutoHomeOverrideTable extends HTMLElement {
             delete this[prop];
             this[prop] = value;
         }
-    }
-    
-    set overrides( value ) {
-        this._overrides = value;
-        this.refresh();
-    }
-
-    get overrides() {
-        return this._overrides;
     }
     
     set devices( value ) {
@@ -80,11 +73,11 @@ class AutoHomeOverrideTable extends HTMLElement {
         this.refresh();
     }
 
-    async addOverride() {
-        ( this.overrides || [] ).push({
+    async addDevice() {
+        ( this.devices || [] ).push({
             start: new Date(),
             end: new Date(),
-            name: 'new override',
+            name: 'new device',
             changes: []
         });
 
@@ -93,7 +86,7 @@ class AutoHomeOverrideTable extends HTMLElement {
     }
 
     async removeItem( idx ) {
-        ( this.overrides || [] ).splice( idx, 1 );
+        ( this.devices || [] ).splice( idx, 1 );
         await clientAPI.saveZone();
         this.refresh();
     }
@@ -109,22 +102,16 @@ class AutoHomeOverrideTable extends HTMLElement {
         let rows = container.querySelectorAll( 'ui5-table-row' );
 
         var rowIdx = 0;
-        for( ; rowIdx < ( this.overrides || [] ).length; ++rowIdx ) {
-            let override = this.overrides[rowIdx];
+        for( ; rowIdx < ( this.devices || [] ).length; ++rowIdx ) {
+            let device = this.devices[rowIdx];
             let row = rows[rowIdx];
             if( row ) {
-                row.binding.update({
-                    override,
-                    devices: this.devices
-                }, {
+                row.binding.update( device, {
                     editable: !this.readonly
                 });
             } else {
                 row = rowTemplate.cloneNode( true ).querySelector( 'ui5-table-row' );
-                row.binding = new Binding( row, {
-                    override,
-                    devices: this.devices
-                }, {
+                row.binding = new Binding( row, device, {
                     editable: !this.readonly
                 });
                 row.binding.on( 'change', () => {
@@ -152,4 +139,4 @@ class AutoHomeOverrideTable extends HTMLElement {
 }
 
 
-customElements.define( 'autohome-override-table', AutoHomeOverrideTable );
+customElements.define( 'autohome-device-table', AutoHomeDeviceTable );

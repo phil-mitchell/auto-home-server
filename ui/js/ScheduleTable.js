@@ -31,13 +31,6 @@ class AutoHomeScheduleTable extends HTMLElement {
         this.shadow.innerHTML = template;
 
         this._upgradeProperty( 'readonly' );
-        /*
-        let popover = this.shadowRoot.querySelector( '#gravity-calculator-popover' );
-        popover.querySelector( '#sg-value-input' ).addEventListener( 'change', this.computeSG.bind( this ) );
-        popover.querySelector( '#temp-value-input' ).addEventListener( 'change', this.computeSG.bind( this ) );
-        popover.querySelector( '#temp-value-calibration' ).addEventListener( 'change', this.computeSG.bind( this ) );
-        popover.querySelector( '#gravity-calculator-popover-submit' ).addEventListener( 'click', this.saveCalculator.bind( this ) );
-        */
         this.refresh();
     }
 
@@ -56,6 +49,15 @@ class AutoHomeScheduleTable extends HTMLElement {
 
     get schedules() {
         return this._schedules;
+    }
+    
+    set devices( value ) {
+        this._devices = value;
+        this.refresh();
+    }
+
+    get devices() {
+        return this._devices;
     }
     
     set readonly( value ) {
@@ -77,86 +79,25 @@ class AutoHomeScheduleTable extends HTMLElement {
     attributeChangedCallback( name, oldValue, newValue ) {
         this.refresh();
     }
-/*
-    openCalculator( event ) {
-        let input = event.detail.target;
-        let popover = this.shadowRoot.querySelector( '#gravity-calculator-popover' );
-        let sg = input.quantity;
-        if( typeof( sg.convert ) !== 'function' ) {
-            sg = new Quantity( 'scalar', sg );
-        }
-        popover.querySelector( '#sg-value-computed' ).quantity = sg;
-        popover.querySelector( '#sg-value-input' ).quantity = sg;
-        popover.querySelector( '#temp-value-input' ).quantity = new Quantity( 'temperature', 20, 'celsius' );
-        popover.querySelector( '#temp-value-calibration' ).quantity = new Quantity( 'temperature', 20, 'celsius' );
-
-        popover.input = input;
-
-        popover.open( input );
-    }
-
-    saveCalculator( event ) {
-        let popover = this.shadowRoot.querySelector( '#gravity-calculator-popover' );
-        let input = popover.input;
-
-        let sg = popover.querySelector( '#sg-value-computed' ).quantity;
-        let prevSG = input.quantity;
-
-        if( prevSG && prevSG.unit ) {
-            sg = sg.convert( prevSG.unit );
-        }
-
-        if( typeof( prevSG.convert ) !== 'function' ) {
-            sg = sg.toObject();
-        }
-
-        input.quantity = sg;
-        input.fireEvent( 'change', {
-            quantity: sg
-        });
-
-        popover.close();
-    }
-
-    computeSG() {
-        let popover = this.shadowRoot.querySelector( '#gravity-calculator-popover' );
-        let measuredSG = popover.querySelector( '#sg-value-input' ).quantity;
-
-        let sg = measuredSG.convert( 'SG' ).value;
-        let temperature = popover.querySelector( '#temp-value-input' ).quantity.convert( 'celsius' ).value;
-        let calibration = popover.querySelector( '#temp-value-calibration' ).quantity.convert( 'celsius' ).value;
-
-        let calibrationDensity = 1 - ( calibration + 288.9414 ) /
-            ( 508929.2 * ( calibration + 68.12963 ) ) *
-            Math.pow( calibration - 3.9863, 2 );
-
-        let density = 1 - ( temperature + 288.9414 ) /
-            ( 508929.2 * ( temperature + 68.12963 ) ) *
-            Math.pow( temperature - 3.9863, 2 );
-
-        let adjustedSG = new Quantity( 'scalar', sg * calibrationDensity / density, 'SG' );
-
-        popover.querySelector( '#sg-value-computed' ).quantity = adjustedSG.convert( measuredSG.unit );
-    }
-*/
 
     async addSchedule() {
         ( this.schedules || [] ).push({
             days: [],
-            time: '00:00',
+            start: '00:00',
             changes: []
         });
-
-        await clientAPI.saveZone();
-        this.refresh();
+        await this.save();
     }
 
     async removeItem( idx ) {
         ( this.schedules || [] ).splice( idx, 1 );
-        await clientAPI.saveZone();
-        this.refresh();
+        await this.save();
     }
 
+    async save() {
+        await clientAPI.saveZone();
+    }
+    
     async refresh() {
         var container = this.shadowRoot.querySelector( 'ui5-table' );
         if( !container ) {
@@ -172,23 +113,24 @@ class AutoHomeScheduleTable extends HTMLElement {
             let schedule = this.schedules[rowIdx];
             let row = rows[rowIdx];
             if( row ) {
-                row.binding.update( schedule, {
+                row.binding.update({
+                    schedule,
+                    devices: this.devices
+                }, {
                     editable: !this.readonly
                 });
             } else {
                 row = rowTemplate.cloneNode( true ).querySelector( 'ui5-table-row' );
-                row.binding = new Binding( row, schedule, {
+                row.binding = new Binding( row, {
+                    schedule,
+                    devices: this.devices
+                }, {
                     editable: !this.readonly
                 });
                 row.binding.on( 'change', () => {
-                    clientAPI.saveZone();
+                    this.save();
                 });
                 container.appendChild( row );
-/*
-                let valueInput = row.querySelector( '#value-input' );
-                valueInput.addEventListener( 'open-calculator', this.openCalculator.bind( this ) );
-*/
-            
             }
 
             let deleteButtonSlot = row.querySelector( '#delete-button-slot' );

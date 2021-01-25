@@ -11,77 +11,41 @@
     <ui5-label style="vertical-align: middle" for="zone-name" show-colon>Zone name</ui5-label>
     <ui5-input style="vertical-align: middle" id="zone-name" data-value="name" data-readonly="@readonly"></ui5-input>
   </div>
-  <div>
-    <ui5-label for="zone-notes">Notes: </ui5-label>
-    <ui5-textarea id="zone-notes" placeholder="Notes" data-value="notes" rows="5" data-readonly="@readonly"></ui5-textarea>
-  </div>
 </ui5-panel>
 <ui5-tabcontainer class="full-width" fixed show-overflow>
-  <ui5-tab text="Charts" id="schedules-panel" selected>
+  <ui5-tab text="Devices" id="devices-panel" selected>
     <ui5-bar design="Subheader">
-      <ui5-button design="Default" icon="add" id="add-chart-button" slot="endContent">New chart</ui5-button>
+      <ui5-button
+        design="Default" icon="add" id="add-device-button" slot="endContent" data-disabled="@readonly">New device</ui5-button>
+    </ui5-bar>
+    <autohome-device-table
+      data-devices="devices"
+      data-readonly="@readonly">
+    </autohome-device-table>
+  </ui5-tab>
+  <ui5-tab text="History" id="history-panel">
+    <ui5-bar design="Subheader">
+      <ui5-button design="Default" icon="add" id="add-chart-button" slot="endContent" data-disabled="@readonly">New chart</ui5-button>
     </ui5-bar>
   </ui5-tab>
   <ui5-tab text="Schedules" id="schedules-panel">
     <ui5-bar design="Subheader">
-      <ui5-button design="Default" icon="add" id="add-schedule-button" slot="endContent">New schedule</ui5-button>
+      <ui5-button design="Default" icon="add" id="add-schedule-button" slot="endContent" data-disabled="@readonly">New schedule</ui5-button>
     </ui5-bar>
     <autohome-schedule-table
       data-schedules="schedules"
+      data-devices="devices"
       data-readonly="@readonly">
     </autohome-schedule-table>
   </ui5-tab>
   <ui5-tab text="Overrides" id="overrides-panel">
     <ui5-bar design="Subheader">
-      <ui5-button design="Default" icon="add" id="add-override-button" slot="endContent">New override</ui5-button>
+      <ui5-button design="Default" icon="add" id="add-override-button" slot="endContent" data-disabled="@readonly">New override</ui5-button>
     </ui5-bar>
     <autohome-override-table
       data-overrides="overrides"
+      data-devices="devices"
       data-readonly="@readonly">
     </autohome-override-table>
   </ui5-tab>
-  <ui5-tab text="Sensors" id="sensors-panel">
-    <ui5-bar design="Subheader">
-      <ui5-button design="Default" icon="add" id="add-sensor-button" slot="endContent">New sensor</ui5-button>
-    </ui5-bar>
-  </ui5-tab>
-  <ui5-tab text="Outputs" id="outputs-panel">
-    <ui5-bar design="Subheader">
-      <ui5-button design="Default" icon="add" id="add-output-button" slot="endContent">New output</ui5-button>
-    </ui5-bar>
-  </ui5-tab>
 </ui5-tabcontainer>
-
-<ui5-responsive-popover id="add-sensor-popover" header-text="New sensor">
-  <div class="popover-content">
-    <div class="messages">
-    </div>
-    <div class="flex-column">
-      <ui5-label for="nameInput" required>Name: </ui5-label>
-      <ui5-input id="nameInput" placeholder="name"></ui5-input>
-    </div>
-  </div>
-  <div slot="footer" class="popover-footer">
-    <ui5-button id="add-sensor-popover-submit" design="Emphasized">Add</ui5-button>
-  </div>
-</ui5-responsive-popover>
-<template id="sensor-template">
-  <autohome-sensor-card data-sensor="$" data-heading="name" style="height:fit-content" header-interactive></autohome-sensor-card>
-</template>
-
-<ui5-responsive-popover id="add-output-popover" header-text="New output">
-  <div class="popover-content">
-    <div class="messages">
-    </div>
-    <div class="flex-column">
-      <ui5-label for="nameInput" required>Name: </ui5-label>
-      <ui5-input id="nameInput" placeholder="name"></ui5-input>
-    </div>
-  </div>
-  <div slot="footer" class="popover-footer">
-    <ui5-button id="add-output-popover-submit" design="Emphasized">Add</ui5-button>
-  </div>
-</ui5-responsive-popover>
-<template id="output-template">
-  <autohome-output-card data-output="$" data-heading="name" style="height:fit-content" header-interactive></autohome-output-card>
-</template>

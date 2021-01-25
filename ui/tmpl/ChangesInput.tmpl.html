@@ -1,0 +1,27 @@
+<ui5-responsive-popover id="change-editor" header-text="Change">
+
+  <div slot="footer" class="popover-footer">
+    <ui5-button id="delete-change" design="Negative" data-disabled="@readonly">Remove</ui5-button>
+    <ui5-button id="save-change" design="Emphasized" data-disabled="@readonly">Save</ui5-button>
+  </div>
+
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-input" show-colon>Device</ui5-label>
+    <bindable-select
+      id="device-input"
+      style="width:fit-content;vertical-align:middle"
+      data-value="device"
+      data-disabled="@readonly">
+    </bindable-select>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="value-input" show-colon>Value</ui5-label>
+    <quantity-input
+      id="value-input"
+      style="width:fit-content;vertical-align:middle"
+      data-quantity="value"
+      data-readonly="@readonly">
+    </quantity-input>
+  </div>
+
+</ui5-responsive-popover>

@@ -14,6 +14,7 @@ import "@ui5/webcomponents-fiori/dist/Bar.js";
 
 import './ScheduleTable.js';
 import './OverrideTable.js';
+import './DeviceTable.js';
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -42,108 +43,8 @@ class AutoHomeZoneEditor extends BaseEditor {
         return clientAPI.deleteZone();
     }
 
-    addSensor() {
-        let popover = this.shadowRoot.getElementById( 'add-sensor-popover' );
-        this.clearMessages( popover );
-        popover.querySelector( '#nameInput' ).value = '';
-        this.shadowRoot.getElementById( 'add-sensor-popover' ).open( this.addSensorButton );
-    }
-
-    async submitNewSensor() {
-        let popover = this.shadowRoot.getElementById( 'add-sensor-popover' );
-
-        if( popover.errorMessages ) {
-            for( let errorMessage of popover.errorMessages ) {
-                errorMessage.parentNode.removeChild( errorMessage );
-            }
-            delete popover.errorMessages;
-        }
-
-        let data = {
-            name: popover.querySelector( '#nameInput' ).value || undefined
-        };
-
-        try {
-            await clientAPI.postSensor( data );
-            popover.close();
-        } catch( e ) {
-            if( e.data && e.data.errors ) {
-                for( let error of e.data.errors ) {
-                    if( error.location.path ) {
-                        this.addMessage( `${error.location.path} ${error.message}` );
-                    } else {
-                        this.addMessage( popover, error.message );
-                    }
-                }
-            } else {
-                this.addMessage( popover, e.message );
-            }
-        }
-    }
-    
-    handleSensorsChange( sensors ) {
-        sensors = sensors || this.sensors || [];
-        this.sensors = sensors;
-
-        this.populateList(
-            sensors, '#sensors-panel', 'sensor-template', 'autohome-sensor-card',
-            this.editButton.pressed, ( card, value ) => {
-                card.addEventListener( 'ui5-headerClick', () => {
-                    clientAPI.setSensor( value );
-                });
-            });
-    }
-
-    addOutput() {
-        let popover = this.shadowRoot.getElementById( 'add-output-popover' );
-        this.clearMessages( popover );
-        popover.querySelector( '#nameInput' ).value = '';
-        this.shadowRoot.getElementById( 'add-output-popover' ).open( this.addOutputButton );
-    }
-
-    async submitNewOutput() {
-        let popover = this.shadowRoot.getElementById( 'add-output-popover' );
-
-        if( popover.errorMessages ) {
-            for( let errorMessage of popover.errorMessages ) {
-                errorMessage.parentNode.removeChild( errorMessage );
-            }
-            delete popover.errorMessages;
-        }
-
-        let data = {
-            name: popover.querySelector( '#nameInput' ).value || undefined
-        };
-
-        try {
-            await clientAPI.postOutput( data );
-            popover.close();
-        } catch( e ) {
-            if( e.data && e.data.errors ) {
-                for( let error of e.data.errors ) {
-                    if( error.location.path ) {
-                        this.addMessage( `${error.location.path} ${error.message}` );
-                    } else {
-                        this.addMessage( popover, error.message );
-                    }
-                }
-            } else {
-                this.addMessage( popover, e.message );
-            }
-        }
-    }
-    
-    handleOutputsChange( outputs ) {
-        outputs = outputs || this.outputs || [];
-        this.outputs = outputs;
-
-        this.populateList(
-            outputs, '#outputs-panel', 'output-template', 'autohome-output-card',
-            this.editButton.pressed, ( card, value ) => {
-                card.addEventListener( 'ui5-headerClick', () => {
-                    clientAPI.setOutput( value );
-                });
-            });
+    addDevice( event ) {
+        this.shadowRoot.querySelector( 'autohome-device-table' ).addDevice();
     }
 
     addSchedule( event ) {
@@ -151,7 +52,7 @@ class AutoHomeZoneEditor extends BaseEditor {
     }
 
     addOverride() {
-        this.shadowRoot.querySelector( 'autohome-schedule-table' ).addSchedule();
+        this.shadowRoot.querySelector( 'autohome-override-table' ).addOverride();
     }
 
     async connectedCallback() {
@@ -161,20 +62,9 @@ class AutoHomeZoneEditor extends BaseEditor {
 
         await super.connectedCallback();
 
-        clientAPI.on( this.changeEvent, () => {
-            this.handleSensorsChange( ( clientAPI.zone || {}).sensors || [] );
-            this.handleOutputsChange( ( clientAPI.zone || {}).outputs || [] );
-        });
-
+        this.addDeviceButton = this.shadowRoot.getElementById( 'add-device-button' );
+        this.addDeviceButton.addEventListener( 'click', this.addDevice.bind( this ) );
         
-        this.addSensorButton = this.shadowRoot.getElementById( 'add-sensor-button' );
-        this.addSensorButton.addEventListener( 'click', this.addSensor.bind( this ) );
-        this.shadowRoot.getElementById( 'add-sensor-popover-submit' ).addEventListener( 'click', this.submitNewSensor.bind( this ) );
-        
-        this.addOutputButton = this.shadowRoot.getElementById( 'add-output-button' );
-        this.addOutputButton.addEventListener( 'click', this.addOutput.bind( this ) );
-        this.shadowRoot.getElementById( 'add-output-popover-submit' ).addEventListener( 'click', this.submitNewOutput.bind( this ) );
-
         this.addScheduleButton = this.shadowRoot.getElementById( 'add-schedule-button' );
         this.addScheduleButton.addEventListener( 'click', this.addSchedule.bind( this ) );
 

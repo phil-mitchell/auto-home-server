@@ -17,6 +17,7 @@ import './ZoneCard.js';
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
 import BaseEditor from './BaseEditor.js';
+import './TZSelect.js';
 
 var template = null;
 

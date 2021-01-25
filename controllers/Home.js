@@ -132,13 +132,27 @@ module.exports = class HomeController {
 
     static async update( reqContext ) {
         var home = await this.getRequestHome( reqContext, ACCESS_MANAGE );
+        var replace = reqContext.req.method === 'PUT';
+
         if( home['@etag'] !== reqContext.requestBody['@etag'] ) {
             throw reqContext.makeError( 409, `Home ${home.name} was edited by another request` );
         }
         delete reqContext.requestBody['@etag'];
+        delete reqContext.requestBody['@editor'];
+        delete reqContext.requestBody['@manager'];
+        delete reqContext.requestBody['@editable'];
+
+        reqContext.requestBody.id = home.id;
 
         let homes = reqContext.extraContext.store.db.table( 'homes' );
-        let res = await homes.get( home.id ).update( reqContext.requestBody, { returnChanges: 'always' }).run();
+
+        let res = homes.get( home.id );
+        if( replace ) {
+            res = res.replace( reqContext.requestBody, { returnChanges: 'always' });
+        } else {
+            res = res.update( reqContext.requestBody, { returnChanges: 'always' });
+        }
+        res = await res.run();
         return res.changes[0].new_val;
     }
 
@@ -225,6 +239,11 @@ module.exports = class HomeController {
                     unit: r.unit
                 };
                 delete r.unit;
+                try {
+                    r.data = JSON.parse( r.data || '{}' );
+                } catch( e ) {
+                    r.data = {};
+                }
             }) };
         }
         

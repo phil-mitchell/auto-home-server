@@ -112,7 +112,10 @@ class QuantityInput extends Input {
         }
 
         if( this.unit != null ) {
-            quantity = quantity.convert( this.unit );
+            try {
+                quantity = quantity.convert( this.unit );
+            } catch( e ) {
+            }
         }
 
         let quantitymin = this.quantitymin;
@@ -133,10 +136,15 @@ class QuantityInput extends Input {
             this.shadowRoot.querySelector( 'input' ).setAttribute( 'max', quantitymax.value );
         }
 
-        if( this.hideunit || this.unit == null ) {
+        if( this.hideunit || ( quantity.unit == null && this.unit == null ) ) {
             this.querySelector( '#unit' ).innerText = '';
         } else {
-            this.querySelector( '#unit' ).innerText = Quantity.parseUnit( quantity.type, this.unit ).toString() || '_';
+            try {
+                this.querySelector( '#unit' ).innerText = Quantity.parseUnit(
+                    quantity.type, this.unit == null ? quantity.unit : this.unit ).toString() || '_';
+            } catch( e ) {
+                this.querySelector( '#unit' ).innerText = '_';
+            }
         }
 
         if( !this.calculator || this.readonly ) {
@@ -145,7 +153,7 @@ class QuantityInput extends Input {
             this.querySelector( '#calculator' ).style.display = 'inline-block';
         }
 
-        this.value = quantity.value.toFixed( this.decimal );
+        this.value = quantity.value == null ? '' : quantity.value.toFixed( this.decimal );
     }
 
     get _filteredItems() {

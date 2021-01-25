@@ -25,6 +25,10 @@ class DOWPicker extends MultiComboBox {
             item.setAttribute( 'text', day );
             this.appendChild( item );
         }
+
+        this.addEventListener( 'selection-change', event => {
+            this.fireEvent( 'change', event.data );
+        });
         
         this._upgradeProperty( 'days' );
     }
@@ -38,8 +42,8 @@ class DOWPicker extends MultiComboBox {
     }
 
     set days( days ) {
-        for( let day of days ) {
-            this.querySelector( '#item-day-' + day ).selected = true;
+        for( let day = 0; day < DAYS.length; day++ ) {
+            this.querySelector( '#item-day-' + day ).selected = days.indexOf( day ) !== -1;
         }
     }
 
@@ -50,6 +54,7 @@ class DOWPicker extends MultiComboBox {
                 days.push( day );
             }
         }
+        return days;
     }
 }
 

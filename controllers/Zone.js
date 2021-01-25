@@ -2,7 +2,7 @@
 
 const HomeController = require( './Home' );
 const Influx = require( 'influx' );
-const strftime = require( 'strftime' );
+const debug = require( 'debug' )( 'ZoneController' );
 
 module.exports = class ZoneController {
     static async getRequestZone( reqContext, need_write ) {
@@ -73,7 +73,8 @@ module.exports = class ZoneController {
 
     static async update( reqContext ) {
         var zone = await this.getRequestZone( reqContext, true );
-
+        var replace = reqContext.req.method === 'PUT';
+        
         if( zone['@etag'] !== reqContext.requestBody['@etag'] ) {
             throw reqContext.makeError( 409, `Zone was edited by another request` );
         }
@@ -89,7 +90,16 @@ module.exports = class ZoneController {
             }
         }
 
-        let res = await zones.get( zone.id ).update( reqContext.requestBody, { returnChanges: 'always' }).run();
+        reqContext.requestBody.id = zone.id;
+        reqContext.requestBody.home = zone.home;
+
+        let res = zones.get( zone.id );
+        if( replace ) {
+            res = res.replace( reqContext.requestBody, { returnChanges: 'always' });
+        } else {
+            res = res.update( reqContext.requestBody, { returnChanges: 'always' });
+        }
+        res = await res.run();
         return res.changes[0].new_val;
     }
 
@@ -102,7 +112,7 @@ module.exports = class ZoneController {
         return zones.get( zone.id ).delete().run();
     }
 
-    static computeCurrentTargets( zone ) {
+    static computeCurrentTargets( zone, timezone, now, ignoreOverrides ) {
         zone.schedules = zone.schedules || [];
         zone.schedules.sort( ( a, b ) => {
             return a.start.localeCompare( b.start );
@@ -115,15 +125,27 @@ module.exports = class ZoneController {
 
         let targets = {};
 
-        let now = new Date();
-        let day = now.getDay();
+        now = now || new Date();
 
-        let strftimeLocal = strftime.timezone( '-0500' );
-        let time = strftimeLocal( '%H:%M', now );
-        console.log( `Current time is ${time}` );
+        timezone = timezone || 'UTC';
+        let nowParts = Intl.DateTimeFormat(
+            'en-CA', {
+                timeZone: timezone,
+                weekday: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).formatToParts( new Date() );
+
+        let day = [
+            'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+        ].indexOf( nowParts[0].value );
+
+        let time = nowParts.slice( 2 ).map( p => p.value ).join( '' );
+        debug( `Current time is ${time} on day ${day}` );
 
         for( let schedule of zone.schedules ) {
-            if( schedule.days.indexOf( now.getDay() ) > -1 ) {
+            if( schedule.days.indexOf( day ) > -1 ) {
                 for( let change of schedule.changes ) {
                     let scheduleStart = new Date( now );
                     scheduleStart.setUTCHours( Number( schedule.start.split( ':' )[0] ) + 5 );
@@ -132,31 +154,37 @@ module.exports = class ZoneController {
                     scheduleStart.setMilliseconds( 0 );
                     
                     if( schedule.start <= time ) {
-                        console.log( `Found past schedule starting at ${schedule.start}; setting ${change.device} to ${JSON.stringify( change )} until ${scheduleStart.toISOString()}` );
-                        targets[change.device] = JSON.parse( JSON.stringify( change ) );
+                        debug( `Found past schedule starting at ${schedule.start}; setting ${change.device} to ${JSON.stringify( change )} until ${scheduleStart.toISOString()}` );
+                        targets[change.device] = {
+                            value: change.value
+                        };
                         targets[change.device].until = new Date( now );
                         targets[change.device].until.setUTCHours( 23 + 5 );
                         targets[change.device].until.setMinutes( 59 );
                         targets[change.device].until.setSeconds( 59 );
                         targets[change.device].until.setMilliseconds( 999 );
                     } else if( targets[change.device] && targets[change.device].until > scheduleStart ) {
-                        console.log( `Found future schedule starting at ${schedule.start}; setting ${change.device} until ${scheduleStart.toISOString()}` );
+                        debug( `Found future schedule starting at ${schedule.start}; setting ${change.device} until ${scheduleStart.toISOString()}` );
                         targets[change.device].until = scheduleStart;
                     }
                 }
             }
         }
 
-        for( let override of zone.overrides ) {
-            for( let change of override.changes ) {
-                let overrideStart = new Date( override.start );
-                let overrideEnd = new Date( override.end );
+        if( !ignoreOverrides ) {
+            for( let override of zone.overrides ) {
+                for( let change of override.changes ) {
+                    let overrideStart = new Date( override.start );
+                    let overrideEnd = new Date( override.end );
 
-                if( overrideStart <= now && overrideEnd >= now ) {
-                    targets[change.device] = JSON.parse( JSON.stringify( change ) );
-                    targets[change.device] = override.end;
-                } else if( overrideStart > now && targets[change.device] && targets[change.device].until > overrideStart ) {
-                    targets[change.device].until = overrideStart;
+                    if( overrideStart <= now && overrideEnd >= now ) {
+                        targets[change.device] = {
+                            value: change.value
+                        };
+                        targets[change.device].until = override.end;
+                    } else if( overrideStart > now && targets[change.device] && targets[change.device].until > overrideStart ) {
+                        targets[change.device].until = overrideStart;
+                    }
                 }
             }
         }
@@ -193,46 +221,38 @@ module.exports = class ZoneController {
                     };
                     delete device.current.unit;
                 }
-            }
-        }
-
-        if( typeof( value ) === 'object' && ( value.schedules || value.overrides ) ) {
-            this.computeCurrentTargets( value );
-        }
-        return value;
-    }
-
-    static nextScheduleStart( zone, now ) {
-        now = now || new Date();
-        let day = now.getDay();
-        let time = now.toTimeString().slice( 0, 5 );
-        let schedule = null;
-        
-        let schedules = zone.schedules.sort( ( a, b ) => {
-            return a.start.localeCompare( b.start );
-        });
-
-        for( let i = 0; i < schedules.length; i++ ) {
-            if( schedules[i].days.indexOf( now.getDay() ) > -1 ) {
-                if( schedules[i].start > time ) {
-                    schedule = schedules[i];
-                    break;
+                try {
+                    device.current.data = JSON.parse( device.current.data || '{}' );
+                } catch( e ) {
+                    device.current.data = {};
                 }
             }
         }
 
-        let nextStart = new Date( now );
-        nextStart.setSeconds( 0 );
-        nextStart.setMilliseconds( 0 );
+        if( typeof( value ) === 'object' && ( value.schedules || value.overrides ) ) {
+            var home = await HomeController.getRequestHome( reqContext, HomeController.READ_ONLY );
+            this.computeCurrentTargets( value, home.timezone );
+        }
+        return value;
+    }
 
-        if( !schedule ) {
-            // no schedule; return end of current day
-            nextStart.setHours( 23 );
+    static nextScheduleStart( zone, timezone, now ) {
+        this.computeCurrentTargets( zone, timezone, now, true );
+        let nextStart = null;
+        
+        for( let device of zone.devices.filter( x => x.target.until ) ) {
+            let until = new Date( device.target.until );
+            if( !nextStart || until < nextStart ) { 
+                nextStart = until;
+            }
+        }
+
+        if( !nextStart ) {
+            nextStart = new Date( now );
+            nextStart.setUTCHours( 23 + 5 );
             nextStart.setMinutes( 59 );
-        } else {
-            let hhmm = schedule.start.split( ':' );
-            nextStart.setHours( hhmm[0] );
-            nextStart.setMinutes( hhmm[1] );
+            nextStart.setSeconds( 59 );
+            nextStart.setMilliseconds( 999 );
         }
 
         return nextStart;
@@ -254,7 +274,7 @@ module.exports = class ZoneController {
                 override.start = new Date().toISOString();
             }
             if( !override.end ) {
-                override.end = ( await this.nextScheduleStart( zone, new Date( override.start ) ) ).toISOString();
+                override.end = ( await this.nextScheduleStart( zone, home.timezone, new Date( override.start ) ) ).toISOString();
             }
             let overrides = zone.overrides.filter(
                 o => o.name !== override.name
@@ -298,9 +318,9 @@ module.exports = class ZoneController {
                     type: type
                 },
                 fields: {
-                    value: Number( reading.value ),
-                    unit: reading.unit || '',
-                    data: reading.data || ''
+                    value: Number( reading.value.value ),
+                    unit: reading.value.unit || '',
+                    data: JSON.stringify( reading.data || '{}' )
                 },
                 timestamp: timestamp
             } ] );
@@ -334,6 +354,11 @@ module.exports = class ZoneController {
                     unit: r.unit
                 };
                 delete r.unit;
+                try {
+                    r.data = JSON.parse( r.data || '{}' );
+                } catch( e ) {
+                    r.data = {};
+                }
             }) };
         }
 

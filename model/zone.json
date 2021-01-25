@@ -18,7 +18,31 @@
                     "name": { "type": "string" },
                     "type": { "type": "string" },
                     "direction": { "type": "string", "enum": [ "input", "output", "in/out" ] },
-                    "data": { "type": "string" },
+                    "threshold": { "type": "number" },
+                    "calibrate": { "type": "number" },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "device": { "type": "string" },
+                                "direction": { "type": "string", "enum": [ "increase", "decrease", "none" ] },
+                                "data": { "type": "object" }
+                            },
+                            "required": [ "device", "direction" ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "interface": {
+                        "type": "object",
+                        "properties": {
+                            "type": { "type": "string" },
+                            "address": { "type": "string" },
+                            "config": { "type": "object" }
+                        },
+                        "required": [ "type", "address" ],
+                        "additionalProperties": false
+                    },
                     "current": {
                         "readOnly": true,
                         "type": "object",
@@ -31,8 +55,9 @@
                                     "unit": { "type": "string" }
                                 }
                             },
-                            "data": { "type": "string" }
-                        }
+                            "data": { "type": "object" }
+                        },
+                        "additionalProperties": false
                     },
                     "target": {
                         "readOnly": true,
@@ -46,8 +71,9 @@
                                     "unit": { "type": "string" }
                                 }
                             },
-                            "data": { "type": "string" }
-                        }
+                            "data": { "type": "object" }
+                        },
+                        "additionalProperties": false
                     }
                 },
                 "required": [ "name", "type", "direction" ]
@@ -71,15 +97,19 @@
                                     "properties": {
                                         "value": { "type": "number" },
                                         "unit": { "type": "string" }
-                                    }
+                                    },
+                                    "required": [ "value" ],
+                                    "additionalProperties": false
                                 },
-                                "data": { "type": "string" }
+                                "data": { "type": "object" }
                             },
-                            "required": [ "device", "value" ]
+                            "required": [ "device", "value" ],
+                            "additionalProperties": false
                         }
                     }
                 },
-                "required": [ "days", "start", "changes" ]
+                "required": [ "days", "start", "changes" ],
+                "additionalProperties": false
             }
         },
         "overrides": {
@@ -101,18 +131,22 @@
                                     "properties": {
                                         "value": { "type": "number" },
                                         "unit": { "type": "string" }
-                                    }
+                                    },
+                                    "required": [ "value" ],
+                                    "additionalProperties": false
                                 },
-                                "data": { "type": "string" }
+                                "data": { "type": "object" }
                             },
-                            "required": [ "device", "value" ]
+                            "required": [ "device", "value" ],
+                            "additionalProperties": false
                         }
                     }
                 },
-                "required": [ "start", "end", "changes" ]
+                "required": [ "start", "end", "changes" ],
+                "additionalProperties": false
             }
         },
-        "home": { "$ref": "home.json#/properties/id" }
+        "home": { "$ref": "home.json#/properties/id" },
     },
     "operations": {
         "addSensorReading": {
@@ -124,11 +158,19 @@
                     "time": { "type": "string", "format": "date-time" },
                     "sensor": { "type": "string" },
                     "type": { "type": "string" },
-                    "value": { "type": "number" },
-                    "unit": { "type": "string" },
-                    "data": { "type": "string" }
+                    "value": {
+                        "type": "object",
+                        "properties": {
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" }
+                        },
+                        "required": [ "value" ],
+                        "additionalProperties": false
+                    },
+                    "data": { "type": "object" }
                 },
-                required: [ "value" ]
+                "required": [ "sensor", "value" ],
+                "additionalProperties": false
             },
             "responses": {
                 "200": {
@@ -156,7 +198,7 @@
                     "sensor": { "type": "string" },
                     "type": { "type": "string" }
                 },
-                required: [ "start", "end" ]
+                "required": [ "start", "end" ]
             },
             "responses": {
                 "200": {
@@ -179,7 +221,7 @@
                                                         "unit": { "type": "string" }
                                                     }
                                                 },
-                                                "data": { "type": "string" },
+                                                "data": { "type": "object" },
                                                 "type": { "type": "string" },
                                                 "home": { "type": "string" },
                                                 "zone": { "type": "string" }
@@ -215,7 +257,7 @@
                                         "unit": { "type": "string" }
                                     }
                                 },
-                                "data": { "type": "string" }
+                                "data": { "type": "object" }
                             },
                             "required": [ "device", "value" ]
                         }

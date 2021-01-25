@@ -365,6 +365,6 @@ createServer()
     console.log( 'Try visiting http://localhost:8082/api-docs' );
 })
 .catch( err => {
-    console.error( err.stack );
+    console.error( err.stack || err.message || err );
     process.exit( 1 );
 });

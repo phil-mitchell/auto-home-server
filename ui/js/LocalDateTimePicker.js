@@ -21,11 +21,12 @@ class LocalDateTimePicker extends DateTimePicker {
     }
 
     set isotime( isotime ) {
-        this.setAttribute( 'value', this.getFormat().format( new Date( isotime ) ) );
+        let time = isotime ? this.getFormat().format( new Date( isotime ) ) : '';
+        this.setAttribute( 'value', time );
     }
 
     get isotime() {
-        return this.dateValue.toISOString();
+        return( this.dateValue && this.dateValue.toISOString() ) || null;
     }
 }
 

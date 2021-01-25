@@ -39,6 +39,19 @@ function SRMtoMCU( srm ) {
 }
 
 var TYPES = [ {
+    name: 'on-off',
+    units: [ {
+        name: '',
+        symbol: '',
+        aliases: [],
+        factor: 1,
+        category: [ 'boolean', 'on-off' ]
+    } ],
+    base: '',
+    convertToString: function( value ) {
+        return value ? 'ON' : 'OFF';
+    }
+  }, {
     name: 'scalar',
     dimension: { M: 0, L: 0, T: 0, I: 0, K: 0, N: 0 },
     units: [ {
@@ -230,7 +243,8 @@ var TYPES = [ {
         toBase: x => ( x - 32 ) * 5 / 9 + 273.15,
         fromBase: b => ( b - 273.15 ) * 9 / 5 + 32
     } ],
-    base: 'kelvin'
+    base: 'kelvin',
+    default: 'celsius'
 }, {
     name: 'area',
     dimension: { M: 0, L: 2, T: 0, I: 0, K: 0, N: 0 },
@@ -524,7 +538,7 @@ class Quantity {
         }
 
         if( this._unit == null || this._unit == '' ) {
-            this._unit = this._parsedType.base;
+            this._unit = this._parsedType.default || this._parsedType.base;
         }
 
         this._parsedUnit = Quantity.parseUnit( this.type, this.unit );
@@ -645,6 +659,9 @@ class Quantity {
 
     toString( decimal ) {
         let value = this.value;
+        if( this._parsedType.convertToString ) {
+            return this._parsedType.convertToString( value, decimal, this.parsedUnit );
+        }
         if( decimal != null ) {
             value = value.toFixed( decimal );
         }
