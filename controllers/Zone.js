@@ -319,7 +319,7 @@ module.exports = class ZoneController {
                 },
                 fields: {
                     value: Number( reading.value.value ),
-                    target: reading.target && Number( reading.target.value ),
+                    target: ( reading.target && reading.target.value != null ) ? Number( reading.target.value ) : undefined,
                     unit: reading.value.unit || '',
                     data: JSON.stringify( reading.data || '{}' )
                 },
