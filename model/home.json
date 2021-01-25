@@ -78,26 +78,34 @@
                                         "items": {
                                             "type": "object",
                                             "properties": {
-                                                "time": { "type": "string", "format": "date-time" },
-                                                "sensor": { "type": "string" },
-                                                "value": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "value": { "type": "number" },
-                                                        "unit": { "type": "string" }
-                                                    }
-                                                },
-                                                "target": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "value": { "type": "number" },
-                                                        "unit": { "type": "string" }
-                                                    }
-                                                },
-                                                "data": { "type": "string" },
                                                 "type": { "type": "string" },
                                                 "home": { "type": "string" },
-                                                "zone": { "type": "string" }
+                                                "zone": { "type": "string" },
+                                                "sensor": { "type": "string" },
+                                                "fields": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "time": { "type": "string", "format": "date-time" },
+                                                            "value": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": { "type": "number" },
+                                                                    "unit": { "type": "string" }
+                                                                }
+                                                            },
+                                                            "target": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": { "type": "number" },
+                                                                    "unit": { "type": "string" }
+                                                                }
+                                                            }
+                                                        },
+                                                        "data": { "type": "object" }
+                                                    }
+                                                }
                                             }
                                         }
                                     }

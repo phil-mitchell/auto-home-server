@@ -213,45 +213,10 @@ module.exports = class HomeController {
 
             return res;
         } else if( operationName === 'querySensorReadings' ) {
-            let home = await this.getRequestHome( reqContext, ACCESS_READ_ONLY );
+            let home = await this.getRequestHome( reqContext, ACCESS_EDIT );
 
-            let influx = reqContext.extraContext.store.influx;
-            let filter = reqContext.requestBody;
-
-            let query = `select * from sensor_readings where ` +
-                `time >= ${Influx.escape.stringLit( filter.start )} and ` +
-                `time <= ${Influx.escape.stringLit( filter.end )} and ` +
-                `home = ${Influx.escape.stringLit( home.id )}`;
-
-            if( filter.sensor ) {
-                query = `${query} and sensor = ${Influx.escape.stringLit( filter.sensor )}`;
-            }
-
-            if( filter.type ) {
-                query = `${query} and type = ${Influx.escape.stringLit( filter.type )}`;
-            }
-
-            query = `${query} order by time asc`;
-
-            return{ readings: ( await influx.query( query ) ).map( r => {
-                r.value = {
-                    value: r.value,
-                    unit: r.unit
-                };
-                if( r.target != null ) {
-                    r.target = {
-                        value: r.target,
-                        unit: r.unit
-                    };
-                }
-                delete r.unit;
-                try {
-                    r.data = JSON.parse( r.data || '{}' );
-                } catch( e ) {
-                    r.data = {};
-                }
-                return r;
-            }) };
+            const ZoneController = require( './Zone' );
+            return ZoneController.querySensorReadings( reqContext, home );
         }
         
         let home = await this.getRequestHome( reqContext, ACCESS_MANAGE );

@@ -3,6 +3,7 @@
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Direction</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Type</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Current</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Updated</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Target</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Until</ui5-table-column>
 </ui5-table>
@@ -55,6 +56,14 @@
         data-quantity="current.value"
         decimal="1">
       </quantity-label>
+    </ui5-table-cell>
+    <ui5-table-cell style="white-space: nowrap">
+      <local-datetime-picker
+        id="updated-output"
+        format-pattern="yyyy-MM-dd HH:mm:ss"
+        data-isotime="current.time"
+        readonly>
+      </local-datetime-picker>
     </ui5-table-cell>
     <ui5-table-cell style="white-space: nowrap">
       <quantity-label
