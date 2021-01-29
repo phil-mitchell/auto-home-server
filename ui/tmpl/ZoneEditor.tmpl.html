@@ -18,15 +18,12 @@
       <ui5-button
         design="Default" icon="add" id="add-device-button" slot="endContent" data-disabled="@readonly">New device</ui5-button>
     </ui5-bar>
-    <autohome-device-table
-      data-devices="devices"
-      data-readonly="@readonly">
+    <autohome-device-table>
     </autohome-device-table>
   </ui5-tab>
   <ui5-tab text="History" id="history-panel">
-    <ui5-bar design="Subheader">
-      <ui5-button design="Default" icon="add" id="add-chart-button" slot="endContent" data-disabled="@readonly">New chart</ui5-button>
-    </ui5-bar>
+    <autohome-device-history>
+    </autohome-device-history>
   </ui5-tab>
   <ui5-tab text="Schedules" id="schedules-panel">
     <ui5-bar design="Subheader">
@@ -34,7 +31,6 @@
     </ui5-bar>
     <autohome-schedule-table
       data-schedules="schedules"
-      data-devices="devices"
       data-readonly="@readonly">
     </autohome-schedule-table>
   </ui5-tab>
@@ -44,8 +40,21 @@
     </ui5-bar>
     <autohome-override-table
       data-overrides="overrides"
-      data-devices="devices"
       data-readonly="@readonly">
     </autohome-override-table>
   </ui5-tab>
 </ui5-tabcontainer>
+
+<ui5-responsive-popover id="add-device-popover" header-text="New device">
+  <div class="popover-content">
+    <div class="messages">
+    </div>
+    <div class="flex-column">
+      <ui5-label for="nameInput" required>Name: </ui5-label>
+      <ui5-input id="nameInput" placeholder="name"></ui5-input>
+    </div>
+  </div>
+  <div slot="footer" class="popover-footer">
+    <ui5-button id="add-device-popover-submit" design="Emphasized">Add</ui5-button>
+  </div>
+</ui5-responsive-popover>

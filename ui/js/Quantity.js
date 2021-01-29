@@ -39,18 +39,28 @@ function SRMtoMCU( srm ) {
 }
 
 var TYPES = [ {
-    name: 'on-off',
+    name: 'switch',
     units: [ {
         name: '',
         symbol: '',
         aliases: [],
         factor: 1,
-        category: [ 'boolean', 'on-off' ]
+        category: [ 'boolean', 'switch' ]
     } ],
     base: '',
     convertToString: function( value ) {
         return value ? 'ON' : 'OFF';
     }
+  },  {
+    name: 'humidity',
+    units: [ {
+        name: 'percent',
+        symbol: '%',
+        aliases: [],
+        factor: 1e-2,
+        category: [ 'percent' ]
+    } ],
+    base: 'percent'
   }, {
     name: 'scalar',
     dimension: { M: 0, L: 0, T: 0, I: 0, K: 0, N: 0 },
@@ -243,7 +253,7 @@ var TYPES = [ {
         toBase: x => ( x - 32 ) * 5 / 9 + 273.15,
         fromBase: b => ( b - 273.15 ) * 9 / 5 + 32
     } ],
-    base: 'kelvin',
+    base: 'celsius',
     default: 'celsius'
 }, {
     name: 'area',

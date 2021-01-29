@@ -215,8 +215,8 @@ module.exports = class HomeController {
         } else if( operationName === 'querySensorReadings' ) {
             let home = await this.getRequestHome( reqContext, ACCESS_EDIT );
 
-            const ZoneController = require( './Zone' );
-            return ZoneController.querySensorReadings( reqContext, home );
+            const DeviceController = require( './Device' );
+            return DeviceController.querySensorReadings( reqContext, home.id );
         }
         
         let home = await this.getRequestHome( reqContext, ACCESS_MANAGE );

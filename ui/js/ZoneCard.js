@@ -46,7 +46,7 @@ class AutoHomeZoneCard extends Card {
                 if( ( device.current || {}).value ) {
                     value = device.current.value.value + ' ' + device.current.value.unit;
 
-                    if( device.type === 'on-off' ) {
+                    if( device.type === 'switch' ) {
                         value = device.current.value.value ? 'ON' : 'OFF';
                     }
                 }
@@ -66,7 +66,7 @@ class AutoHomeZoneCard extends Card {
                 if( ( device.target || {}).value ) {
                     value = device.target.value.value + ' ' + device.target.value.unit;
 
-                    if( device.type === 'on-off' ) {
+                    if( device.type === 'switch' ) {
                         value = device.target.value.value ? 'ON' : 'OFF';
                     }
                 }

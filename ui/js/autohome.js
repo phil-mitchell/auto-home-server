@@ -133,6 +133,13 @@ class AutoHomeApp extends HTMLElement {
             shellbar.secondaryTitle = 'Zone';
             state.zone = clientAPI.zone.id;
         }
+        if( clientAPI.device ) {
+            addMenuItem();
+            title += ' > ' + clientAPI.device.name;
+            page = 'device-editor';
+            shellbar.secondaryTitle = 'Device';
+            state.zone = clientAPI.device.id;
+        }
         shellbar.primaryTitle = title;
 
         if( !this.pageNode || this.page !== page ) {
@@ -150,6 +157,9 @@ class AutoHomeApp extends HTMLElement {
                 break;
             case'zone-editor':
                 await import( './ZoneEditor.js' );
+                break;
+            case'device-editor':
+                await import( './DeviceEditor.js' );
                 break;
             }
 

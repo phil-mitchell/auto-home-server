@@ -73,7 +73,7 @@ async function initDatabase() {
 
     let db = Model.r.db( 'home' );
     for( let table of[
-        'users', 'homes', 'members', 'zones', 'temperatures'
+        'users', 'homes', 'members', 'zones', 'devices'
     ] ) {
         try {
             await db.tableCreate( table );

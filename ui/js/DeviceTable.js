@@ -32,6 +32,16 @@ class AutoHomeDeviceTable extends HTMLElement {
         }
         this.shadow.innerHTML = template;
 
+        var container = this.shadowRoot.querySelector( 'ui5-table' );
+        container.addEventListener( 'row-click', event => {
+            let bubbleEvent = new CustomEvent( 'row-click', {
+                detail: event.detail,
+                target: event.target,
+                timeStamp: event.timeStamp
+            });
+            this.dispatchEvent( bubbleEvent );
+        });
+
         this._upgradeProperty( 'readonly' );
         this.refresh();
     }
@@ -73,23 +83,6 @@ class AutoHomeDeviceTable extends HTMLElement {
         this.refresh();
     }
 
-    async addDevice() {
-        ( this.devices || [] ).push({
-            name: 'new device',
-            type: 'on-off',
-            direction: 'output'
-        });
-
-        await clientAPI.saveZone();
-        this.refresh();
-    }
-
-    async removeItem( idx ) {
-        ( this.devices || [] ).splice( idx, 1 );
-        await clientAPI.saveZone();
-        this.refresh();
-    }
-
     async refresh() {
         var container = this.shadowRoot.querySelector( 'ui5-table' );
         if( !container ) {
@@ -97,7 +90,6 @@ class AutoHomeDeviceTable extends HTMLElement {
         }
 
         let rowTemplate = this.shadowRoot.getElementById( 'table-row-template' ).content;
-        let deleteTemplate = this.shadowRoot.getElementById( 'delete-button-template' ).content;
         let rows = container.querySelectorAll( 'ui5-table-row' );
 
         var rowIdx = 0;
@@ -117,17 +109,6 @@ class AutoHomeDeviceTable extends HTMLElement {
                     clientAPI.saveZone();
                 });
                 container.appendChild( row );
-            }
-
-            let deleteButtonSlot = row.querySelector( '#delete-button-slot' );
-            if( !this.readonly ) {
-                if( !deleteButtonSlot.hasChildNodes() ) {
-                    let deleteButton = deleteTemplate.cloneNode( true ).querySelector( 'ui5-button' );
-                    deleteButton.addEventListener( 'click', this.removeItem.bind( this, rowIdx ) );
-                    deleteButtonSlot = deleteButtonSlot.appendChild( deleteButton );
-                }
-            } else {
-                deleteButtonSlot.innerHTML = '';
             }
         }
 

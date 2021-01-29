@@ -83,12 +83,7 @@ module.exports = class ZoneController {
         let db = reqContext.extraContext.store.db;
         let zones = db.table( 'zones' );
 
-        if( reqContext.requestBody.devices ) {
-            for( let device of reqContext.requestBody.devices ) {
-                delete device.current;
-                delete device.target;
-            }
-        }
+        delete reqContext.requestBody.devices;
 
         reqContext.requestBody.id = zone.id;
         reqContext.requestBody.home = zone.home;
@@ -113,6 +108,9 @@ module.exports = class ZoneController {
     }
 
     static computeCurrentTargets( zone, timezone, now, ignoreOverrides ) {
+        if( zone.targets ) {
+            return zone.targets;
+        }
         zone.schedules = zone.schedules || [];
         zone.schedules.sort( ( a, b ) => {
             return a.start.localeCompare( b.start );
@@ -189,9 +187,8 @@ module.exports = class ZoneController {
             }
         }
 
-        for( let device of zone.devices ) {
-            device.target = targets[device.name] || {};
-        }
+        zone.targets = targets;
+        return zone.targets;
     }
 
     static async formatResponse( reqContext, value ) {
@@ -229,9 +226,14 @@ module.exports = class ZoneController {
             }
         }
 
-        if( typeof( value ) === 'object' && ( value.schedules || value.overrides ) ) {
-            var home = await HomeController.getRequestHome( reqContext, HomeController.READ_ONLY );
-            this.computeCurrentTargets( value, home.timezone );
+        if( typeof( value ) === 'object' ) {
+            value.schedules = value.schedules || [];
+            value.overrides = value.overrides || [];
+
+            if( value.devices ) {
+                var home = await HomeController.getRequestHome( reqContext, HomeController.READ_ONLY );
+                this.computeCurrentTargets( value, home.timezone );
+            }
         }
         return value;
     }
@@ -266,10 +268,10 @@ module.exports = class ZoneController {
         let query = `select * from sensor_readings where ` +
             `time >= ${Influx.escape.stringLit( filter.start )} and ` +
             `time <= ${Influx.escape.stringLit( filter.end )} and ` +
-            `home = ${Influx.escape.stringLit( home.id )}`;
+            `home = ${Influx.escape.stringLit( home )}`;
 
         if( zone ) {
-            query = `${query} and zone = ${Influx.escape.stringLit( zone.id )}`;
+            query = `${query} and zone = ${Influx.escape.stringLit( zone )}`;
         }
 
         if( filter.sensor ) {
@@ -332,6 +334,7 @@ module.exports = class ZoneController {
         let zones = db.table( 'zones' );
 
         if( operationName === 'addOverride' ) {
+            const DeviceController = require( './DeviceController' );
             let zone = await this.getRequestZone( reqContext, true );
             let home = reqContext.home.home;
 
@@ -342,9 +345,15 @@ module.exports = class ZoneController {
             if( !override.end ) {
                 override.end = ( await this.nextScheduleStart( zone, home.timezone, new Date( override.start ) ) ).toISOString();
             }
+
+            for( let change of override.changes ) {
+                change.device = ( ( await DeviceController.find( reqContext ) ).filter( d => d.name === change.device )[0] || {}).id;
+            }
+
             let overrides = zone.overrides.filter(
                 o => o.name !== override.name
             );
+
             overrides.push( override );
 
             await zones.get( zone.id ).update({
@@ -364,38 +373,12 @@ module.exports = class ZoneController {
                 overrides: overrides
             }).run();
             return true;
-        } else if( operationName === 'addSensorReading' ) {
-            let zone = await this.getRequestZone( reqContext, true );
-            let home = reqContext.home.home;
-
-            let influx = reqContext.extraContext.store.influx;
-            let reading = reqContext.requestBody;
-            let sensor = ( zone.sensors || [] ).filter( s => s.name === reading.sensor )[0];
-            let type = ( sensor || {}).type || reading.type || 'unknown';
-
-            let timestamp = new Date( reading.time ).getTime() * 1000000;
-
-            await influx.writePoints( [ {
-                measurement: 'sensor_readings',
-                tags: {
-                    home: home.id,
-                    zone: zone.id,
-                    sensor: reading.sensor,
-                    type: type
-                },
-                fields: {
-                    value: Number( reading.value.value ),
-                    target: ( reading.target && reading.target.value != null ) ? Number( reading.target.value ) : undefined,
-                    unit: reading.value.unit || '',
-                    data: JSON.stringify( reading.data || '{}' )
-                },
-                timestamp: timestamp
-            } ] );
-            return true;
         } else if( operationName === 'querySensorReadings' ) {
             let zone = await this.getRequestZone( reqContext, false );
-            let home = zone.home;
-            return this.querySensorReadings( reqContext, home, zone );
+            let home = reqContext.home.home;
+
+            const DeviceController = require( './Device' );
+            return DeviceController.querySensorReadings( reqContext, home.id, zone.id );
         }
 
         throw new Error( `Unknown operation ${operationName}` );

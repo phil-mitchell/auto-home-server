@@ -15,6 +15,7 @@ import "@ui5/webcomponents-fiori/dist/Bar.js";
 import './ScheduleTable.js';
 import './OverrideTable.js';
 import './DeviceTable.js';
+import './DeviceHistory.js';
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -43,8 +44,63 @@ class AutoHomeZoneEditor extends BaseEditor {
         return clientAPI.deleteZone();
     }
 
-    addDevice( event ) {
-        this.shadowRoot.querySelector( 'autohome-device-table' ).addDevice();
+    selectDevice( event ) {
+        clientAPI.setDevice( event.detail.row.binding.data.id );
+    }
+
+    addDevice() {
+        let popover = this.shadowRoot.getElementById( 'add-device-popover' );
+        this.clearMessages( popover );
+        popover.querySelector( '#nameInput' ).value = '';
+        this.shadowRoot.getElementById( 'add-device-popover' ).open( this.addDeviceButton );
+    }
+
+    async submitNewDevice() {
+        let popover = this.shadowRoot.getElementById( 'add-device-popover' );
+
+        if( popover.errorMessages ) {
+            for( let errorMessage of popover.errorMessages ) {
+                errorMessage.parentNode.removeChild( errorMessage );
+            }
+            delete popover.errorMessages;
+        }
+
+        let data = {
+            name: popover.querySelector( '#nameInput' ).value || undefined,
+            type: 'switch',
+            threshold: 0,
+            direction: 'output',
+            calibrate: 0,
+            interface: {
+                type: 'gpio',
+                address: ''
+            },
+            changes: []
+        };
+
+        try {
+            await clientAPI.postDevice( data );
+            popover.close();
+        } catch( e ) {
+            if( e.data && e.data.errors ) {
+                for( let error of e.data.errors ) {
+                    if( error.location.path ) {
+                        this.addMessage( `${error.location.path} ${error.message}` );
+                    } else {
+                        this.addMessage( popover, error.message );
+                    }
+                }
+            } else {
+                this.addMessage( popover, e.message );
+            }
+        }
+    }
+    
+    handleDevicesChange( devices ) {
+        this.shadowRoot.querySelector( 'autohome-device-table' ).devices = devices;
+        this.shadowRoot.querySelector( 'autohome-device-history' ).devices = devices;
+        this.shadowRoot.querySelector( 'autohome-schedule-table' ).devices = devices;
+        this.shadowRoot.querySelector( 'autohome-override-table' ).devices = devices;
     }
 
     addSchedule( event ) {
@@ -60,10 +116,15 @@ class AutoHomeZoneEditor extends BaseEditor {
             template = await ( await fetch( './tmpl/ZoneEditor.tmpl.html' ) ).text();
         }
 
+        clientAPI.on( 'devicesChange', this.handleDevicesChange.bind( this ) );
+
         await super.connectedCallback();
 
+        this.shadowRoot.querySelector( 'autohome-device-table' ).addEventListener( 'row-click', this.selectDevice.bind( this ) );
+        
         this.addDeviceButton = this.shadowRoot.getElementById( 'add-device-button' );
         this.addDeviceButton.addEventListener( 'click', this.addDevice.bind( this ) );
+        this.shadowRoot.getElementById( 'add-device-popover-submit' ).addEventListener( 'click', this.submitNewDevice.bind( this ) );
         
         this.addScheduleButton = this.shadowRoot.getElementById( 'add-schedule-button' );
         this.addScheduleButton.addEventListener( 'click', this.addSchedule.bind( this ) );

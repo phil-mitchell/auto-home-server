@@ -24,6 +24,7 @@ class AutoHomeClient extends ClientAPI{
         this.historyFrozen = true;
         await this.setHome( state.home );
         await this.setZone( state.zone );
+        await this.setDevice( state.device );
         this.historyFrozen = false;
         this.updateHistory( true );
     }
@@ -116,6 +117,10 @@ class AutoHomeClient extends ClientAPI{
         if( this.zone ) {
             state.zone = this.zone.id;
             title += '/zone/' + state.zone;
+        }
+        if( this.device ) {
+            state.device = this.device.id;
+            title += '/device/' + state.device;
         }
 
         var hash = `#${title}`;
@@ -340,6 +345,7 @@ class AutoHomeClient extends ClientAPI{
             this.zone = zone;
             this.updateHistory();
             this.emit( 'zoneChange', zone );
+            this.loadDevices();
             return zone;
         }
 
@@ -380,6 +386,138 @@ class AutoHomeClient extends ClientAPI{
             return this.loadZones();
         });
     }
+
+    async loadDevices() {
+        if( !this.home ) {
+            this.setDevice( null );
+            this.emit( 'devicesChange', [] );
+            return;
+        }
+        try {
+            let devices = await clientAPI['get /api/homes/{pathParam0}/zones/{pathParam1}/devices']( this.home.id, this.zone.id );
+            if( this.device && devices.filter( b => b.id === this.device.id ).length === 0 ) {
+                this.setDevice( null );
+            }
+
+            this.emit( 'devicesChange', devices );
+        } catch( error ) {
+            this.emit( 'apiError', error );
+            this.setDevice( null );
+            this.emit( 'devicesChange', [] );
+        }
+    }
+
+    async postDevice( data ) {
+        if( !this.home ) {
+            this.setDevice( null );
+            this.emit( 'devicesChange', [] );
+            return;
+        }
+        try {
+            let device = await clientAPI['post /api/homes/{pathParam0}/zones/{pathParam1}/devices']( this.home.id, this.zone.id, data );
+            await this.loadDevices();
+            await this.setDevice( device );
+        } catch( error ) {
+            this.emit( 'apiError', error );
+            throw error;
+        }
+    }
+
+    async setDevice( device ) {
+        if( !device ) {
+            if( this.device ) {
+                this.device = null;
+                this.loadDevices();
+                this.updateHistory();
+                this.emit( 'deviceChange', null );
+            }
+            return{};
+        }
+
+        if( typeof( device ) === 'object' ) {
+            this.device = device;
+            this.updateHistory();
+            this.emit( 'deviceChange', device );
+            this.loadDevices();
+            return device;
+        }
+
+        try {
+            return this.setDevice( await this['get /api/homes/{pathParam0}/zones/{pathParam1}/devices/{pathParam2}'](
+                this.home.id, this.zone.id, device
+            ) );
+        } catch( error ) {
+            this.emit( 'apiError', error );
+            return this.setDevice( null );
+        }
+    }
+
+    async saveDevice() {
+        let updatedDevice = this.device;
+        try {
+            let device = await clientAPI['put /api/homes/{pathParam0}/zones/{pathParam1}/devices/{pathParam2}'](
+                this.home.id, this.zone.id, updatedDevice.id, updatedDevice
+            );
+        
+            this.emit( 'deviceSaved', device );
+            return this.setDevice( device );
+        } catch( error ) {
+            this.emit( 'apiError', error );
+            throw error;
+        }
+    }
+
+    async deleteDevice() {
+        let deletedDevice = this.device;
+        return clientAPI['delete /api/homes/{pathParam0}/zones/{pathParam1}/devices/{pathParam2}'](
+            this.home.id, this.zone.id, deletedDevice.id
+        ).then( () => {
+            return this.setDevice( null );
+            this.emit( 'deviceDeleted', deletedDevice );
+        }, error => {
+            this.emit( 'apiError', error );
+            return this.loadDevices();
+        });
+    }
+
+    async querySensorReadings( start, end ) {
+        if( !this.home ) {
+            return{
+                readings: []
+            };
+        }
+        if( typeof( start ) === 'object' ) {
+            start = start.toISOString();
+        }
+        if( typeof( end ) === 'object' ) {
+            end = end.toISOString();
+        }
+        try {
+            let url = 'post /api/homes/{pathParam0}';
+            let params = [ this.home.id ];
+            if( this.zone ) {
+                url += '/zones/{pathParam1}';
+                params.push( this.zone.id );
+            }
+
+            if( this.device ) {
+                url += '/devices/{pathParam2}';
+                params.push( this.device.id );
+            }
+
+            url += '/querySensorReadings';
+            params.push({
+                start: start,
+                end: ( end || new Date().toISOString() )
+            });
+
+            return await clientAPI[url].apply( this, params ); 
+        } catch( error ) {
+            this.emit( 'apiError', error );
+            throw error;
+        }
+    }
+
 };
 
 var clientAPI = new AutoHomeClient();

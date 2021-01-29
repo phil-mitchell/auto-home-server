@@ -1,14 +1,11 @@
 import "@ui5/webcomponents/dist/ResponsivePopover.js";
 
-import './QuantityInput.js';
-
 import MultiInput from "@ui5/webcomponents/dist/MultiInput.js";
 import Binding from './Binding.js';
-import Quantity from './Quantity.js';
 
 var template = null;
 
-class ChangesInput extends MultiInput {
+class DeviceChangesInput extends MultiInput {
     constructor() {
         super();
     }
@@ -16,40 +13,20 @@ class ChangesInput extends MultiInput {
     updateValueHelp() {
         let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
         let deviceId = valueHelp.binding.data.device;
-        let device = this.devices.filter( d => d.id === deviceId )[0] || {};
+        let device = ( this.devices || [] ).filter( d => d.id === deviceId )[0] || {};
 
         valueHelp.binding.update( valueHelp.binding.data, {
             editable: this.showValueHelpIcon
         } );
-
-        let inputs = valueHelp.querySelectorAll( 'quantity-input' );
-        for( let input of inputs ) {
-            if( input.quantitytype !== device.type ) {
-                if( input.quantitytype ) {
-                    input.quantity = Object.assign( input.quantity, { unit: null });
-                }
-            
-                input.quantitytype = device.type;
-            }
-        }
     }
 
     openValueHelp( event ) {
         let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
         valueHelp.change = event.target.change;
 
-        let inputs = valueHelp.querySelectorAll( 'quantity-input' );
-        for( let input of inputs ) {
-            input.quantity = null;
-            input.quantitytype = null;
-        }
-
         valueHelp.binding.data = JSON.parse( JSON.stringify( valueHelp.change || {
-            device: ( this._devices[0] || {}).id,
-            value: {
-                value: null,
-                unit: null
-            },
+            device: ( ( this.devices || [] )[0] || {}).id,
+            direction: 'none',
             data: {}
         }) );
 
@@ -61,8 +38,6 @@ class ChangesInput extends MultiInput {
         let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
         let origChange = valueHelp.change;
         let newChange = valueHelp.binding.data;
-
-        newChange.value.unit = newChange.value.unit || '';
 
         let newChanges = [].concat( this.changes );
 
@@ -98,7 +73,7 @@ class ChangesInput extends MultiInput {
         await super.connectedCallback();
 
         if( !template ) {
-            template = await ( await fetch( './tmpl/ChangesInput.tmpl.html' ) ).text();
+            template = await ( await fetch( './tmpl/DeviceChangesInput.tmpl.html' ) ).text();
         }
 
         var children = document.createElement( 'div' );
@@ -127,17 +102,7 @@ class ChangesInput extends MultiInput {
         for( let change of ( this._changes || [] ) ) {
             let item = document.createElement( 'ui5-token' );
 
-            let value = `${change.value.value} ${change.value.unit}`;
-
-            for( let device of ( this._devices || [] ) ) {
-                if( change.device === device.id ) {
-                    try {
-                        value = new Quantity( device.type, change.value ).toString();
-                    } catch( e ) {
-                    }
-                }
-            }
-
+            let value = `${change.direction}`;
             let device = ( this.devices || [] ).filter( d => d.id === change.device )[0] || {
                 name: change.device
             };
@@ -154,19 +119,22 @@ class ChangesInput extends MultiInput {
             
         }
 
-        let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
-        let deviceInput = valueHelp.querySelector( '#device-input' );
+        try {
+            let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
+            let deviceInput = valueHelp.querySelector( '#device-input' );
 
-        while( deviceInput.firstChild ) {
-            deviceInput.removeChild( deviceInput.lastChild );
-        }
+            while( deviceInput.firstChild ) {
+                deviceInput.removeChild( deviceInput.lastChild );
+            }
 
-        for( let device of ( this._devices || [] ) ) {
-            let item = document.createElement( 'ui5-option' );
-            item.appendChild( document.createTextNode( device.name ) );
-            item.setAttribute( 'value', device.id );
-            item.device = device;
-            deviceInput.appendChild( item );
+            for( let device of ( this._devices || [] ) ) {
+                let item = document.createElement( 'ui5-option' );
+                item.appendChild( document.createTextNode( device.name ) );
+                item.setAttribute( 'value', device.id );
+                item.device = device;
+                deviceInput.appendChild( item );
+            }
+        } catch( e ) {
         }
     }
 
@@ -198,4 +166,4 @@ class ChangesInput extends MultiInput {
 }
 
 
-customElements.define( 'schedule-changes-input', ChangesInput );
+customElements.define( 'device-changes-input', DeviceChangesInput );

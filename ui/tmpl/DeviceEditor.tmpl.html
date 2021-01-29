@@ -1,0 +1,127 @@
+<ui5-panel fixed>
+  <div slot="header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <ui5-title>Details</ui5-title>
+    <div>
+      <ui5-togglebutton design="Default" icon="unlocked" id="edit-button" style="vertical-align: middle">Edit</ui5-togglebutton>
+      <ui5-button icon="delete" design="Negative" id="delete-button" style="vertical-align: middle">Remove device</ui5-button>
+      <ui5-button icon="refresh" id="refresh-button" style="vertical-align: middle">Refresh</ui5-button>
+    </div>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-name" show-colon>Device name</ui5-label>
+    <ui5-input style="vertical-align: middle" id="device-name" data-value="name" data-readonly="@readonly"></ui5-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-direction" show-colon>Device direction</ui5-label>
+    <bindable-select
+      id="direction-input"
+      style="width:fit-content;vertical-align:middle"
+      data-value="direction"
+      data-disabled="@readonly">
+      <ui5-option value="input">Input</ui5-option>
+      <ui5-option value="output">Output</ui5-option>
+      <ui5-option value="in/out">In/Out</ui5-option>
+    </bindable-select>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-type" show-colon>Value type</ui5-label>
+    <bindable-select
+      id="device-type"
+      style="width:fit-content;vertical-align:middle"
+      data-value="type"
+      data-disabled="@readonly">
+      <ui5-option value="humidity">Humidity</ui5-option>
+      <ui5-option value="switch">Switch</ui5-option>
+      <ui5-option value="temperature">Temperature</ui5-option>
+    </bindable-select>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="threshold-input" show-colon>Threshold</ui5-label>
+    <quantity-input
+      id="threshold-input"
+      style="width:fit-content;vertical-align:middle"
+      decimal="1"
+      data-quantitytype="type"
+      data-quantity="threshold"
+      data-readonly="@readonly">
+    </quantity-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="threshold-input" show-colon>Calibrate</ui5-label>
+    <quantity-input
+      id="calibrate-input"
+      style="width:fit-content;vertical-align:middle"
+      decimal="1"
+      data-quantitytype="type"
+      data-quantity="calibrate"
+      data-readonly="@readonly">
+    </quantity-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="interface-type" show-colon>Interface</ui5-label>
+    <bindable-select
+      id="interface-type"
+      style="width:fit-content;vertical-align:middle"
+      data-value="interface.type"
+      data-disabled="@readonly">
+      <ui5-option value="ds18x20">DS18x20 thermometer</ui5-option>
+      <ui5-option value="dht11">DHT11 thermometer/hygrometer</ui5-option>
+      <ui5-option value="dht22">DHT22 thermometer/hygrometer</ui5-option>
+      <ui5-option value="gpio">Generic GPIO</ui5-option>
+    </bindable-select>
+    <ui5-label style="vertical-align: middle" for="interface-address" show-colon>address</ui5-label>
+    <ui5-input style="vertical-align: middle" id="interface-address" data-value="interface.address" data-readonly="@readonly"></ui5-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-changes"
+               show-colon>Changes</ui5-label>
+    <device-changes-input
+      id="changes-input"
+      style="width:fit-content"
+      data-changes="changes"
+      readonly
+      data-show-value-help-icon="@editable">
+    </device-changes-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-current" show-colon>Current value</ui5-label>
+    <quantity-label
+      id="device-current"
+      style="width:fit-content;vertical-align:middle"
+      data-quantitytype="type"
+      data-quantity="current.value"
+      decimal="1">
+    </quantity-label>
+    <ui5-label style="vertical-align: middle" for="device-updated" show-colon>Last updated</ui5-label>
+    <local-datetime-picker
+      id="device-updated"
+      format-pattern="yyyy-MM-dd HH:mm:ss"
+      data-isotime="current.time"
+      readonly>
+    </local-datetime-picker>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-target" show-colon>Target value</ui5-label>
+    <quantity-label
+      id="device-target"
+      style="width:fit-content;vertical-align:middle"
+      data-quantitytype="type"
+      data-quantity="target.value"
+      decimal="1">
+    </quantity-label>
+    <ui5-label style="vertical-align: middle" for="device-until" show-colon>Until</ui5-label>
+    <local-datetime-picker
+      id="until-output"
+      format-pattern="yyyy-MM-dd HH:mm:ss"
+      data-isotime="target.until"
+      readonly>
+    </local-datetime-picker>
+  </div>
+</ui5-panel>
+<ui5-panel fixed>
+  <div slot="header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <ui5-title>Details</ui5-title>
+  </div>
+  <autohome-device-history data-devices="$">
+  </autohome-device-history>
+</ui5-panel>

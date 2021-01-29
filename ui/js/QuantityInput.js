@@ -136,21 +136,27 @@ class QuantityInput extends Input {
             this.shadowRoot.querySelector( 'input' ).setAttribute( 'max', quantitymax.value );
         }
 
-        if( this.hideunit || ( quantity.unit == null && this.unit == null ) ) {
-            this.querySelector( '#unit' ).innerText = '';
-        } else {
-            try {
-                this.querySelector( '#unit' ).innerText = Quantity.parseUnit(
-                    quantity.type, this.unit == null ? quantity.unit : this.unit ).toString() || '_';
-            } catch( e ) {
-                this.querySelector( '#unit' ).innerText = '_';
+        let unitField = this.querySelector( '#unit' );
+        if( unitField ) {
+            if( this.hideunit || ( quantity.unit == null && this.unit == null ) ) {
+                unitField.innerText = '';
+            } else {
+                try {
+                    unitField.innerText = Quantity.parseUnit(
+                        quantity.type, this.unit == null ? quantity.unit : this.unit ).toString() || '_';
+                } catch( e ) {
+                    unitField.innerText = '_';
+                }
             }
         }
 
-        if( !this.calculator || this.readonly ) {
-            this.querySelector( '#calculator' ).style.display = 'none';
-        } else {
-            this.querySelector( '#calculator' ).style.display = 'inline-block';
+        let calcField = this.querySelector( '#calculator' );
+        if( calcField ) {
+            if( !this.calculator || this.readonly ) {
+                calcField.style.display = 'none';
+            } else {
+                calcField.style.display = 'inline-block';
+            }
         }
 
         this.value = quantity.value == null ? '' : quantity.value.toFixed( this.decimal );

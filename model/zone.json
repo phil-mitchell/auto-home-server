@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://autohome.ca/model/recipe.json",
+    "$id": "https://autohome.ca/model/zone.json",
     "title": "Zone",
     "description": "Zones",
     "type": "object",
@@ -13,71 +13,9 @@
         "devices": {
             "type": "array",
             "items": {
-                "type": "object",
-                "properties": {
-                    "name": { "type": "string" },
-                    "type": { "type": "string" },
-                    "direction": { "type": "string", "enum": [ "input", "output", "in/out" ] },
-                    "threshold": { "type": "number" },
-                    "calibrate": { "type": "number" },
-                    "changes": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "device": { "type": "string" },
-                                "direction": { "type": "string", "enum": [ "increase", "decrease", "none" ] },
-                                "data": { "type": "object" }
-                            },
-                            "required": [ "device", "direction" ],
-                            "additionalProperties": false
-                        }
-                    },
-                    "interface": {
-                        "type": "object",
-                        "properties": {
-                            "type": { "type": "string" },
-                            "address": { "type": "string" },
-                            "config": { "type": "object" }
-                        },
-                        "required": [ "type", "address" ],
-                        "additionalProperties": false
-                    },
-                    "current": {
-                        "readOnly": true,
-                        "type": "object",
-                        "properties": {
-                            "time": { "type": "string", "format": "date-time" },
-                            "value": {
-                                "type": "object",
-                                "properties": {
-                                    "value": { "type": "number" },
-                                    "unit": { "type": "string" }
-                                }
-                            },
-                            "data": { "type": "object" }
-                        },
-                        "additionalProperties": false
-                    },
-                    "target": {
-                        "readOnly": true,
-                        "type": "object",
-                        "properties": {
-                            "until": { "type": "string", "format": "date-time" },
-                            "value": {
-                                "type": "object",
-                                "properties": {
-                                    "value": { "type": "number" },
-                                    "unit": { "type": "string" }
-                                }
-                            },
-                            "data": { "type": "object" }
-                        },
-                        "additionalProperties": false
-                    }
-                },
-                "required": [ "name", "type", "direction" ]
-            }
+                "$ref": "device.json"
+            },
+            "readOnly": true
         },
         "schedules": {
             "type": "array",
@@ -149,53 +87,6 @@
         "home": { "$ref": "home.json#/properties/id" },
     },
     "operations": {
-        "addSensorReading": {
-            "summary": "Add a new sensor reading",
-            "operationId": "addSensorReading",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "time": { "type": "string", "format": "date-time" },
-                    "sensor": { "type": "string" },
-                    "type": { "type": "string" },
-                    "value": {
-                        "type": "object",
-                        "properties": {
-                            "value": { "type": "number" },
-                            "unit": { "type": "string" }
-                        },
-                        "required": [ "value" ],
-                        "additionalProperties": false
-                    },
-                    "target": {
-                        "type": "object",
-                        "properties": {
-                            "value": { "type": "number" },
-                            "unit": { "type": "string" }
-                        },
-                        "required": [ "value" ],
-                        "additionalProperties": false
-                    },
-                    "data": { "type": "object" }
-                },
-                "required": [ "sensor", "value" ],
-                "additionalProperties": false
-            },
-            "responses": {
-                "200": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "success": { "type": "boolean" }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "querySensorReadings": {
             "summary": "Query sensor readings from the given time range",
             "operationId": "querySensorReadings",
@@ -204,7 +95,6 @@
                 "properties": {
                     "start": { "type": "string", "format": "date-time" },
                     "end": { "type": "string", "format": "date-time" },
-                    "sensor": { "type": "string" },
                     "type": { "type": "string" }
                 },
                 "required": [ "start", "end" ]
