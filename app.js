@@ -7,6 +7,7 @@ const path = require( 'path' );
 const parseUrl = require( 'parseurl' );
 const fs = require( 'fs' );
 const Influx = require( 'influx' );
+const aedes = require( 'aedes' )();
 
 const crypto = require( 'crypto' );
 
@@ -35,6 +36,10 @@ class Model {
 
     static get authdb() {
         return rethinkdb.db( 'auth' );
+    }
+
+    static get aedes() {
+        return aedes;
     }
 
     static get influx() {
@@ -359,11 +364,106 @@ async function createServer() {
     return server;
 }
 
+aedes.authenticate = function( client, username, password, callback ) {
+    apiKeyAuthenticator({
+        req: {
+            query: {
+                api_key: username
+            }
+        }
+    }).then( res => {
+        if( res.type !== 'success' ) {
+            var error = new Error( 'Auth error' );
+            error.returnCode = 4;
+            callback( error, null );
+        } else {
+            client.user = res.user;
+            callback( null, true );
+        }
+    });
+};
+
+aedes.authorizePublish = function( client, packet, callback ) {
+    if( packet.topic.startsWith( `$SYS/broker/connection/${client.id}/` ) ) {
+        return callback( null, packet );
+    }
+
+    const HomeController = require( './controllers/Home' );
+    packet.reqContext = {
+        extraContext: {
+            store: Model
+        },
+        makeError: ( code, message ) => {
+            let err = new Error( message );
+            err.code = code;
+            return err;
+        },
+        user: client.user,
+        requestObjectPath: packet.topic.split( '/' )
+    };
+    HomeController.getRequestHome( packet.reqContext, HomeController.EDIT ).then( res => {
+        callback( null, packet );
+    }, error => {
+        callback( error );
+    });
+}
+
+aedes.authorizeSubscribe = function( client, subscription, callback ) {
+    if( subscription.topic.startsWith( `$SYS/broker/connection/${client.id}/` ) ) {
+        return callback( null, subscription );
+    }
+    const HomeController = require( './controllers/Home' );
+    subscription.reqContext = {
+        extraContext: {
+            store: Model
+        },
+        makeError: ( code, message ) => {
+            let err = new Error( message );
+            err.code = code;
+            return err;
+        },
+        user: client.user,
+        requestObjectPath: subscription.topic.split( '/' )
+    };
+    HomeController.getRequestHome( subscription.reqContext, HomeController.READ_ONLY ).then( res => {
+        callback( null, subscription );
+    }, error => {
+        callback( error );
+    });
+}
+
+aedes.on( 'publish', ( packet, client ) => {
+    if( packet.topic.startsWith( 'homes/' ) && client ) {
+        const DeviceController = require( './controllers/Device' );
+        try {
+            packet.reqContext.requestBody = JSON.parse( packet.payload.toString( 'utf-8' ) );
+            DeviceController.addSensorReading( packet.reqContext ).catch( e => {
+                console.error( `Error writing to topic ${client.reqContext.requestObjectPath}`, e.stack );
+            });
+        } catch( e ) {
+            console.error( e.stack );
+        }
+    }
+});
+
+aedes.on('clientError', function (client, err) {
+  console.error('client error', client.id, err.message, err.stack)
+})
+
+aedes.on('connectionError', function (client, err) {
+  console.error('client error', client, err.message, err.stack)
+})
+
 createServer()
 .then( server => {
     server.listen( 8082 );
     console.log( 'Listening on port 8082' );
     console.log( 'Try visiting http://localhost:8082/api-docs' );
+
+    let mqttServer = require( 'net' ).createServer( aedes.handle );
+    mqttServer.listen( 9883, function() {
+        console.log( 'MQTT server started an listening on port 9883' );
+    });
 })
 .catch( err => {
     console.error( err.stack || err.message || err );

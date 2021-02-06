@@ -13,6 +13,7 @@
   "dependencies": {
     "@ui5/webcomponents": "^1.0.0-rc.11",
     "@ui5/webcomponents-fiori": "^1.0.0-rc.11",
+    "aedes": "^0.44.2",
     "body-parser": "^1.19.0",
     "chart.js": "^2.9.4",
     "chartjs-plugin-datalabels": "^0.7.0",

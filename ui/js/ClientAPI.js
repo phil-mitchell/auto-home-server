@@ -163,6 +163,7 @@ class AutoHomeClient extends ClientAPI{
             this.updateHistory();
             this.emit( 'homeChange', home );
             this.loadZones();
+            this.loadMembers();
             return home;
         }
 
@@ -453,7 +454,8 @@ class AutoHomeClient extends ClientAPI{
     }
 
     async saveDevice() {
-        let updatedDevice = this.device;
+        let updatedDevice = JSON.parse( JSON.stringify( this.device ) );
+        delete updatedDevice.current;
         try {
             let device = await clientAPI['put /api/homes/{pathParam0}/zones/{pathParam1}/devices/{pathParam2}'](
                 this.home.id, this.zone.id, updatedDevice.id, updatedDevice

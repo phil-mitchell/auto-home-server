@@ -14,9 +14,14 @@ module.exports = class DeviceController {
             reqContext.zone = reqContext.zone || {};
             var zone = await ZoneController.getRequestZone( reqContext, need_write );
 
+            let device_path = reqContext.requestObjectPath.indexOf( 'devices' );
+            if( device_path === -1 || reqContext.requestObjectPath.length <= device_path ) {
+                throw reqContext.makeError( 500, `No device in the path` );
+            }
+
             reqContext.home.device = ( await devices.filter({
                 zone: zone.id,
-                id: reqContext.requestObjectPath[6]
+                id: reqContext.requestObjectPath[device_path + 1]
             }).run() )[0];
 
             if( !reqContext.home.device ) {
@@ -68,6 +73,11 @@ module.exports = class DeviceController {
         delete reqContext.requestBody.targets;
 
         let res = await devices.insert( reqContext.requestBody, { returnChanges: true }).run();
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/deviceCreated`,
+            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            qos: 1
+        });
         return res.changes[0].new_val;
     }
 
@@ -96,6 +106,11 @@ module.exports = class DeviceController {
             res = res.update( reqContext.requestBody, { returnChanges: 'always' });
         }
         res = await res.run();
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${reqContext.home.home.id}/zones/${device.zone}/deviceUpdated`,
+            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            qos: 1
+        });
         return res.changes[0].new_val;
     }
 
@@ -105,7 +120,15 @@ module.exports = class DeviceController {
         let db = reqContext.extraContext.store.db;
         let devices = db.table( 'devices' );
 
-        return devices.get( device.id ).delete().run();
+        let res = await devices.get( device.id ).delete().run();
+
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${reqContext.home.home.id}/zones/${device.zone}/deviceRemoved`,
+            payload: Buffer.from( JSON.stringify( device ), 'utf-8' ),
+            qos: 1
+        });
+
+        return res;
     }
 
     static async formatResponse( reqContext, value ) {
@@ -212,38 +235,46 @@ module.exports = class DeviceController {
         }
 
         return { readings: Object.values( readings ) };
-    };
+    }
+
+    static async addSensorReading( reqContext ) {
+        let device = await this.getRequestDevice( reqContext, true );
+        let zone = reqContext.home.zone;
+        let home = reqContext.home.home;
+
+        let influx = reqContext.extraContext.store.influx;
+        let reading = reqContext.requestBody;
+
+        let device_path = reqContext.requestObjectPath.indexOf( 'devices' );
+
+        let type = reqContext.requestObjectPath[device_path+2] || reading.type ||
+            ( device || {}).type || 'unknown';
+
+        let timestamp = new Date( reading.time ).getTime() * 1000000;
+
+        await influx.writePoints( [ {
+            measurement: 'sensor_readings',
+            tags: {
+                home: home.id,
+                zone: zone.id,
+                sensor: device.id,
+                type: type
+            },
+            fields: {
+                value: Number( reading.value.value ),
+                target: ( reading.target && reading.target.value != null ) ? Number( reading.target.value ) : undefined,
+                unit: reading.value.unit || '',
+                data: JSON.stringify( reading.data || '{}' )
+            },
+            timestamp: timestamp
+        } ] );
+    }
 
     static async callOperation( reqContext ) {
         let operationName = reqContext.requestObjectPath[reqContext.requestObjectPath.length-1];
 
         if( operationName === 'addSensorReading' ) {
-            let device = await this.getRequestDevice( reqContext, true );
-            let zone = reqContext.home.zone;
-            let home = reqContext.home.home;
-
-            let influx = reqContext.extraContext.store.influx;
-            let reading = reqContext.requestBody;
-            let type = ( device || {}).type || reading.type || 'unknown';
-
-            let timestamp = new Date( reading.time ).getTime() * 1000000;
-
-            await influx.writePoints( [ {
-                measurement: 'sensor_readings',
-                tags: {
-                    home: home.id,
-                    zone: zone.id,
-                    sensor: device.id,
-                    type: type
-                },
-                fields: {
-                    value: Number( reading.value.value ),
-                    target: ( reading.target && reading.target.value != null ) ? Number( reading.target.value ) : undefined,
-                    unit: reading.value.unit || '',
-                    data: JSON.stringify( reading.data || '{}' )
-                },
-                timestamp: timestamp
-            } ] );
+            await this.addSensorReading( reqContext );
             return true;
         } else if( operationName === 'querySensorReadings' ) {
             let device = await this.getRequestDevice( reqContext, false );

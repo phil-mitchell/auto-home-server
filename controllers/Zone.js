@@ -14,9 +14,14 @@ module.exports = class ZoneController {
             var home = await HomeController.getRequestHome(
                 reqContext, need_write ? HomeController.EDIT : HomeController.READ_ONLY );
 
+            let zone_path = reqContext.requestObjectPath.indexOf( 'zones' );
+            if( zone_path === -1 || reqContext.requestObjectPath.length <= zone_path ) {
+                throw reqContext.makeError( 500, `No zone in the path` );
+            }
+
             reqContext.home.zone = ( await zones.filter({
                 home: home.id,
-                id: reqContext.requestObjectPath[4]
+                id: reqContext.requestObjectPath[zone_path + 1]
             }).run() )[0];
 
             if( !reqContext.home.zone ) {
@@ -68,6 +73,11 @@ module.exports = class ZoneController {
         delete reqContext.requestBody.targets;
 
         let res = await zones.insert( reqContext.requestBody, { returnChanges: true }).run();
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${reqContext.home.home.id}/zoneCreated`,
+            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            qos: 1
+        });
         return res.changes[0].new_val;
     }
 
@@ -84,6 +94,7 @@ module.exports = class ZoneController {
         let zones = db.table( 'zones' );
 
         delete reqContext.requestBody.devices;
+        delete reqContext.requestBody.targets;
 
         reqContext.requestBody.id = zone.id;
         reqContext.requestBody.home = zone.home;
@@ -95,6 +106,11 @@ module.exports = class ZoneController {
             res = res.update( reqContext.requestBody, { returnChanges: 'always' });
         }
         res = await res.run();
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/zoneUpdated`,
+            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            qos: 1
+        });
         return res.changes[0].new_val;
     }
 
@@ -104,7 +120,14 @@ module.exports = class ZoneController {
         let db = reqContext.extraContext.store.db;
         let zones = db.table( 'zones' );
 
-        return zones.get( zone.id ).delete().run();
+        let res = await zones.get( zone.id ).delete().run();
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/zoneRemoved`,
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
+            qos: 1
+        });
+
+        return res;
     }
 
     static computeCurrentTargets( zone, timezone, now, ignoreOverrides ) {
@@ -188,7 +211,7 @@ module.exports = class ZoneController {
         }
 
         zone.targets = targets;
-        return zone.targets;
+        return targets;
     }
 
     static async formatResponse( reqContext, value ) {
