@@ -456,8 +456,8 @@ aedes.on('connectionError', function (client, err) {
 
 createServer()
 .then( server => {
-    server.listen( 8082 );
-    console.log( 'Listening on port 8082' );
+    server.listen( process.env.PORT || 8080 );
+    console.log( `Listening on port ${process.env.PORT || 8080}` );
     console.log( 'Try visiting http://localhost:8082/api-docs' );
 
     let mqttServer = require( 'net' ).createServer( aedes.handle );

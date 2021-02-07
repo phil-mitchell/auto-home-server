@@ -1,3 +1,4 @@
 /config/default.yaml
 /config/rethinkdb.conf
 /node_modules
+/data

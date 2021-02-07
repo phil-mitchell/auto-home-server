@@ -1,0 +1,42 @@
+version: '3'
+
+networks:
+  brewing:
+    external:
+      name: brewing-ingress_brewing
+
+services:
+  influxdb:
+    container_name: auto-home-influx
+    hostname: auto-home-influx
+    image: influxdb
+    restart: always
+    networks:
+      - brewing
+    volumes:
+      - ./config/influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./data/influxdb:/var/lib/influxdb
+  rethinkdb:
+    container_name: auto-home-rethink
+    hostname: auto-home-rethink
+    image: rethinkdb
+    restart: always
+    networks:
+      - brewing
+    volumes:
+      #- ./config/rethinkdb.conf:/etc/influxdb/influxdb.conf
+      - ./data/rethinkdb:/data
+  autohome:
+    container_name: auto-home-server
+    hostname: auto-home-server
+    image: node:lts-alpine
+    restart: always
+    depends_on:
+      - auto-home-rethink
+      - auto-home-influx
+    networks:
+      - brewing
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: "node ./app.js"
