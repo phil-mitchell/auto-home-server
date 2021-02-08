@@ -87,6 +87,18 @@ async function initDatabase() {
         } catch( e ) {
         }
     }
+
+    var config = require( 'config' );
+    if( config.influx.username && config.influx.password ) {
+        try {
+            db = Model.influx;
+            let users = await db.getUsers();
+            if( !users.includes( config.influx.username ) ) {
+                await db.createUser( config.influx.username, config.influx.password, true );
+            }
+        } catch( e ) {
+        }
+    }
 }
 
 async function apiKeyAuthenticator( context, info ) {
