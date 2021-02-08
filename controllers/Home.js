@@ -2,7 +2,6 @@
 
 const UserController = require( './User' );
 const MemberController = require( './Member' );
-const Influx = require( 'influx' );
 
 const ACCESS_READ_ONLY = Symbol( 'ReadOnlyAccess' );
 const ACCESS_EDIT = Symbol( 'EditAccess' );
@@ -82,6 +81,22 @@ module.exports = class HomeController {
         }
 
         return reqContext.home.home;
+    }
+
+    static async getInfluxDatabaseName( reqContext ) {
+        let home = await this.getRequestHome( reqContext );
+        return home.id;
+    }
+
+    static async ensureInfluxDatabase( reqContext ) {
+        let influx = reqContext.extraContext.store.influx;
+        let influxDatabases = await influx.getDatabaseNames();
+        let influxDatabaseName = await this.getInfluxDatabaseName( reqContext );
+        if( !influxDatabases.includes( influxDatabaseName ) ) {
+            await influx.createDatabase( influxDatabaseName );
+        }
+
+        return influxDatabaseName;
     }
 
     static async create( reqContext ) {
@@ -164,6 +179,14 @@ module.exports = class HomeController {
 
         await members.filter({ home: home.id }).delete().run();
         await homes.get( home.id ).delete().run();
+
+        let influx = reqContext.extraContext.store.influx;
+        let influxDatabases = await influx.getDatabaseNames();
+        let influxDatabaseName = await this.getInfluxDatabaseName();
+        if( influxDatabases.includes( influxDatabaseName ) ) {
+            await influx.dropDatabase( influxDatabaseName );
+        }
+
         return true;
     }
 

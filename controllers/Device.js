@@ -142,15 +142,15 @@ module.exports = class DeviceController {
             let zone = reqContext.home.zone;
 
             let influx = reqContext.extraContext.store.influx;
+            let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
             let filter = reqContext.requestBody;
 
             let query = `select time, value, unit, data from sensor_readings where ` +
-                `home = ${Influx.escape.stringLit( home.id )} and ` +
                 `zone = ${Influx.escape.stringLit( zone.id )} and ` +
                 `sensor = ${Influx.escape.stringLit( value.id )} ` +
                 `order by time desc limit 1`;
 
-            value.current = ( await influx.query( query ) )[0] || {};
+            value.current = ( await influx.query( query, { database: influxDatabaseName }) )[0] || {};
             if( value.current.value != null ) {
                 value.current.value = {
                     value: value.current.value,
@@ -173,12 +173,12 @@ module.exports = class DeviceController {
 
     static async querySensorReadings( reqContext, home, zone, device ) {
         let influx = reqContext.extraContext.store.influx;
+        let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
         let filter = reqContext.requestBody;
 
         let query = `select * from sensor_readings where ` +
             `time >= ${Influx.escape.stringLit( filter.start )} and ` +
-            `time <= ${Influx.escape.stringLit( filter.end )} and ` +
-            `home = ${Influx.escape.stringLit( home )}`;
+            `time <= ${Influx.escape.stringLit( filter.end )}`;
 
         if( zone ) {
             query = `${query} and zone = ${Influx.escape.stringLit( zone )}`;
@@ -194,7 +194,7 @@ module.exports = class DeviceController {
 
         query = `${query} order by time asc`;
 
-        let results = ( await influx.query( query ) ).map( r => {
+        let results = ( await influx.query( query, { database: influxDatabaseName }) ).map( r => {
             r.value = {
                 value: r.value,
                 unit: r.unit
@@ -217,9 +217,8 @@ module.exports = class DeviceController {
         let readings = {};
 
         for( let result of results ) {
-            let key = `${result.home}/${result.zone}/${result.sensor}`;
+            let key = `${result.zone}/${result.sensor}`;
             readings[key] = readings[key] || {
-                home: result.home,
                 zone: result.zone,
                 sensor: result.sensor,
                 type: result.type,
@@ -239,10 +238,10 @@ module.exports = class DeviceController {
 
     static async addSensorReading( reqContext ) {
         let device = await this.getRequestDevice( reqContext, true );
-        let zone = reqContext.home.zone;
-        let home = reqContext.home.home;
+        let zone = device.zone;
 
         let influx = reqContext.extraContext.store.influx;
+        let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
         let reading = reqContext.requestBody;
 
         let device_path = reqContext.requestObjectPath.indexOf( 'devices' );
@@ -252,22 +251,41 @@ module.exports = class DeviceController {
 
         let timestamp = new Date( reading.time ).getTime() * 1000000;
 
+        let tags = {
+            zone: zone,
+            sensor: device.id,
+            type: type
+        };
+        let fields = {
+            value: Number( reading.value.value ),
+            unit: reading.value.unit || '',
+            data: JSON.stringify( reading.data || '{}' )
+        };
+
+        if( reading.target && reading.target.value != null ) {
+            fields.target = Number( reading.target.value );
+        }
+
         await influx.writePoints( [ {
             measurement: 'sensor_readings',
-            tags: {
-                home: home.id,
-                zone: zone.id,
-                sensor: device.id,
-                type: type
-            },
-            fields: {
-                value: Number( reading.value.value ),
-                target: ( reading.target && reading.target.value != null ) ? Number( reading.target.value ) : undefined,
-                unit: reading.value.unit || '',
-                data: JSON.stringify( reading.data || '{}' )
-            },
+            tags: tags,
+            fields: fields,
             timestamp: timestamp
-        } ] );
+        }], {
+            database: influxDatabaseName,
+            schema: [ {
+                measurement: 'sensor_readings',
+                fields: {
+                    value: Influx.FieldType.FLOAT,
+                    target: Influx.FieldType.FLOAT,
+                    unit: Influx.FieldType.STRING,
+                    data: Influx.FieldType.STRING
+                },
+                tags: [
+                    'zone', 'sensor', 'type'
+                ]
+            } ]
+        } );
     }
 
     static async callOperation( reqContext ) {

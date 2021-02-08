@@ -9,7 +9,7 @@ services:
   influxdb:
     container_name: auto-home-influx
     hostname: auto-home-influx
-    image: influxdb
+    image: influxdb:1.8
     restart: always
     networks:
       - brewing
@@ -26,14 +26,27 @@ services:
     volumes:
       #- ./config/rethinkdb.conf:/etc/influxdb/influxdb.conf
       - ./data/rethinkdb:/data
+  grafana:
+    container_name: auto-home-grafana
+    hostname: auto-home-grafana
+    image: grafana/grafana
+    restart: always
+    networks:
+      - brewing
+    depends_on:
+      - influxdb
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./config/grafana.ini:/etc/grafana/grafana.ini
   autohome:
     container_name: auto-home-server
     hostname: auto-home-server
     image: node:lts-alpine
     restart: always
     depends_on:
-      - auto-home-rethink
-      - auto-home-influx
+      - rethinkdb
+      - influxdb
+      - grafana
     networks:
       - brewing
     volumes:

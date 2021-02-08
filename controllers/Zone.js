@@ -222,18 +222,16 @@ module.exports = class ZoneController {
 
         if( typeof( value ) === 'object' && value.devices ) {
             for( let device of value.devices ) {
-                let home = reqContext.home.home;
-
                 let influx = reqContext.extraContext.store.influx;
+                let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
                 let filter = reqContext.requestBody;
 
                 let query = `select time, value, unit, data from sensor_readings where ` +
-                    `home = ${Influx.escape.stringLit( home.id )} and ` +
                     `zone = ${Influx.escape.stringLit( value.id )} and ` +
                     `sensor = ${Influx.escape.stringLit( device.name )} ` +
                     `order by time desc limit 1`;
 
-                device.current = ( await influx.query( query ) )[0] || {};
+                device.current = ( await influx.query( query, { database: influxDatabaseName }) )[0] || {};
                 if( device.current.value != null ) {
                     device.current.value = {
                         value: device.current.value,
@@ -285,69 +283,8 @@ module.exports = class ZoneController {
     }
 
     static async querySensorReadings( reqContext, home, zone ) {
-        let influx = reqContext.extraContext.store.influx;
-        let filter = reqContext.requestBody;
-
-        let query = `select * from sensor_readings where ` +
-            `time >= ${Influx.escape.stringLit( filter.start )} and ` +
-            `time <= ${Influx.escape.stringLit( filter.end )} and ` +
-            `home = ${Influx.escape.stringLit( home )}`;
-
-        if( zone ) {
-            query = `${query} and zone = ${Influx.escape.stringLit( zone )}`;
-        }
-
-        if( filter.sensor ) {
-            query = `${query} and sensor = ${Influx.escape.stringLit( filter.sensor )}`;
-        }
-
-        if( filter.type ) {
-            query = `${query} and type = ${Influx.escape.stringLit( filter.type )}`;
-        }
-
-        query = `${query} order by time asc`;
-
-        let results = ( await influx.query( query ) ).map( r => {
-            r.value = {
-                value: r.value,
-                unit: r.unit
-            };
-            if( r.target != null ) {
-                r.target = {
-                    value: r.target,
-                    unit: r.unit
-                };
-            }
-            delete r.unit;
-            try {
-                r.data = JSON.parse( r.data || '{}' );
-            } catch( e ) {
-                r.data = {};
-            }
-            return r;
-        });
-
-        let readings = {};
-
-        for( let result of results ) {
-            let key = `${result.home}/${result.zone}/${result.sensor}`;
-            readings[key] = readings[key] || {
-                home: result.home,
-                zone: result.zone,
-                sensor: result.sensor,
-                type: result.type,
-                fields: []
-            };
-
-            readings[key].fields.push({
-                time: result.time,
-                data: result.data,
-                value: result.value,
-                target: result.target
-            });
-        }
-
-        return { readings: Object.values( readings ) };
+        const DeviceController = require( './DeviceController' );
+        return DeviceController.querySensorReadings( reqContext, home, zone );
     };
 
     static async callOperation( reqContext ) {

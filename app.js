@@ -45,20 +45,7 @@ class Model {
     static get influx() {
         if( !influxdb ) {
             var config = require( 'config' );
-            influxdb = new Influx.InfluxDB( Object.assign({
-                schema: [ {
-                    measurement: 'sensor_readings',
-                    fields: {
-                        value: Influx.FieldType.FLOAT,
-                        target: Influx.FieldType.FLOAT,
-                        unit: Influx.FieldType.STRING,
-                        data: Influx.FieldType.STRING
-                    },
-                    tags: [
-                        'home', 'zone', 'sensor', 'type'
-                    ]
-                } ]
-            }, config.influx ) );
+            influxdb = new Influx.InfluxDB( config.influx );
         }
         return influxdb;
     }
@@ -99,16 +86,6 @@ async function initDatabase() {
             await db.tableCreate( table );
         } catch( e ) {
         }
-    }
-
-    try {
-        var config = require( 'config' );
-        let influxDatabases = await Model.influx.getDatabaseNames();
-        if( !influxDatabases.includes( config.influx.database ) ) {
-            await Model.influx.createDatabase( config.influx.database );
-        }
-    } catch( e ) {
-        console.error( e.stack );
     }
 }
 
@@ -438,7 +415,7 @@ aedes.on( 'publish', ( packet, client ) => {
         try {
             packet.reqContext.requestBody = JSON.parse( packet.payload.toString( 'utf-8' ) );
             DeviceController.addSensorReading( packet.reqContext ).catch( e => {
-                console.error( `Error writing to topic ${client.reqContext.requestObjectPath}`, e.stack );
+                console.error( `Error writing to topic ${packet.topic}`, e.stack );
             });
         } catch( e ) {
             console.error( e.stack );
