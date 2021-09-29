@@ -10,6 +10,7 @@
     "properties": {
         "id": { "type": "string", "readOnly": true },
         "name": { "type": "string" },
+        "controller": { "type": "string" },
         "devices": {
             "type": "array",
             "items": {
@@ -30,6 +31,7 @@
                             "type": "object",
                             "properties": {
                                 "device": { "type": "string" },
+                                "type": { "type": "string" },
                                 "value": {
                                     "type": "object",
                                     "properties": {
@@ -64,6 +66,7 @@
                             "type": "object",
                             "properties": {
                                 "device": { "type": "string" },
+                                "type": { "type": "string" },
                                 "value": {
                                     "type": "object",
                                     "properties": {

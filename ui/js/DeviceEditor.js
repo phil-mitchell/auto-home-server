@@ -15,6 +15,7 @@ import "@ui5/webcomponents-fiori/dist/Bar.js";
 import './DeviceTable.js';
 import './DeviceHistory.js';
 import './DeviceChangesInput.js';
+import './DeviceCalibrationsInput.js';
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -25,10 +26,6 @@ var template = null;
 class AutoHomeDeviceEditor extends BaseEditor {
     constructor() {
         super( 'device', 'deviceChange' );
-    }
-
-    inviteMember() {
-        console.log( 'invite member' );
     }
 
     get template() {

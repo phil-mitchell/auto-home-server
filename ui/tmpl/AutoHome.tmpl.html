@@ -3,7 +3,9 @@
   primary-title="AutoHome"
   logo="./img/favicon.ico"
   >
-  <ui5-avatar id="profile" slot="profile" image="./img/guest.png"></ui5-avatar>
+  <ui5-avatar id="profile" slot="profile">
+    <img src="./img/guest.png"></img>
+  </ui5-avatar>
   <ui5-button id="back-button" icon="nav-back" slot="startButton"></ui5-button>
 </ui5-shellbar>
 <ui5-popover id="user-menu" placement-type="Bottom">
@@ -47,7 +49,9 @@
 </template>
 
 <template id="card-home-template">
-  <ui5-card class="medium" data-heading="name" header-interactive>
-    <img src="./img/home.png" slot="avatar" />
+  <ui5-card class="medium">
+    <ui5-card-header slot="header" data-title-text="name" interactive>
+      <img src="./img/home.png" width="50px" height="50px" slot="avatar" />
+    </ui5-card-header>
   </ui5-card>
 </template>

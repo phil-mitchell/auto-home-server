@@ -2,7 +2,7 @@
   <div slot="header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
     <ui5-title>Details</ui5-title>
     <div>
-      <ui5-togglebutton design="Default" icon="unlocked" id="edit-button" style="vertical-align: middle">Edit</ui5-togglebutton>
+      <ui5-toggle-button design="Default" icon="unlocked" id="edit-button" style="vertical-align: middle">Edit</ui5-toggle-button>
       <ui5-button icon="delete" design="Negative" id="delete-button" style="vertical-align: middle">Remove home</ui5-button>
       <ui5-button icon="refresh" id="refresh-button" style="vertical-align: middle">Refresh</ui5-button>
     </div>
@@ -50,7 +50,8 @@
   </div>
 </ui5-responsive-popover>
 <template id="zone-template">
-  <autohome-zone-card data-zone="$" data-heading="name" style="height:fit-content" header-interactive></autohome-zone-card>
+  <autohome-zone-card data-zone="$" style="height:fit-content">
+  </autohome-zone-card>
 </template>
 
 <ui5-responsive-popover id="add-member-popover" header-text="Invite member">
@@ -67,7 +68,9 @@
   </div>
 </ui5-responsive-popover>
 <template id="member-template">
-  <ui5-card class="medium" data-heading="user.name" data-subheading="user.email[0]" header-interactive>
-    <img data-src="user.image" slot="avatar" />
+  <ui5-card class="medium">
+    <ui5-card-header data-title-text="user.name" data-subtitle-text="user.email[0]" interactive>
+      <img data-src="user.image" slot="avatar" />
+    </ui5-card-header>
   </ui5-card>
 </template>

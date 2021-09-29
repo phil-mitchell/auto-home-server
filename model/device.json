@@ -20,10 +20,36 @@
                 "type": "object",
                 "properties": {
                     "device": { "type": "string" },
+                    "type": { "type": "string" },
                     "direction": { "type": "string", "enum": [ "increase", "decrease", "none" ] },
                     "data": { "type": "object" }
                 },
                 "required": [ "device", "direction" ],
+                "additionalProperties": false
+            }
+        },
+        "calibrations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": { "type": "string" },
+                    "calibration": {
+                        "type": "object",
+                        "properties": {
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" }
+                        }
+                    },
+                    "threshold": {
+                        "type": "object",
+                        "properties": {
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" }
+                        }
+                    },
+                },
+                "required": [ "type" ],
                 "additionalProperties": false
             }
         },

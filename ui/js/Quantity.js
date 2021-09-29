@@ -61,6 +61,16 @@ var TYPES = [ {
         category: [ 'percent' ]
     } ],
     base: 'percent'
+  },  {
+    name: 'humidex',
+    units: [ {
+        name: '',
+        symbol: '',
+        aliases: [],
+        factor: 1,
+        category: [ 'humidex' ]
+    } ],
+    base: ''
   }, {
     name: 'scalar',
     dimension: { M: 0, L: 0, T: 0, I: 0, K: 0, N: 0 },

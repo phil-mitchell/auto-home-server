@@ -1,0 +1,45 @@
+<ui5-responsive-popover id="calibration-editor" header-text="Calibration">
+
+  <div slot="footer" class="popover-footer">
+    <ui5-button id="delete-calibration" design="Negative" data-disabled="@readonly">Remove</ui5-button>
+    <ui5-button id="save-calibration" design="Emphasized" data-disabled="@readonly">Save</ui5-button>
+  </div>
+
+  <div>
+    <ui5-label style="vertical-align: middle" for="device-type" show-colon>Value type</ui5-label>
+    <bindable-select
+      id="device-type"
+      style="width:fit-content;vertical-align:middle"
+      data-value="type"
+      data-disabled="@readonly">
+      <ui5-option value="humidex">Humidex</ui5-option>
+      <ui5-option value="humidity">Humidity</ui5-option>
+      <ui5-option value="switch">Switch</ui5-option>
+      <ui5-option value="temperature">Temperature</ui5-option>
+    </bindable-select>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="threshold-input" show-colon>Threshold</ui5-label>
+    <quantity-input
+      id="threshold-input"
+      style="width:fit-content;vertical-align:middle"
+      decimal="1"
+      quantitymin="0"
+      data-quantitytype="type"
+      data-quantity="threshold"
+      data-readonly="@readonly">
+    </quantity-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="calibration-input" show-colon>Calibrate</ui5-label>
+    <quantity-input
+      id="calibration-input"
+      style="width:fit-content;vertical-align:middle"
+      decimal="1"
+      data-quantitytype="type"
+      data-quantity="calibration"
+      data-readonly="@readonly">
+    </quantity-input>
+  </div>
+
+</ui5-responsive-popover>

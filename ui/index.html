@@ -3,12 +3,17 @@
     <title>AutoHome</title>
     <link rel="icon" href="./img/favicon.ico">
     <link rel="manifest" href="manifest.json">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <script defer src="./modules/mqtt/dist/mqtt.min.js"></script>
     <script defer src="./modules/es-module-shims/dist/es-module-shims.min.js"></script>
     <script type="importmap-shim">
       {
         "imports": {
           "@ui5/": "./modules/@ui5/",
           "lit-html/": "./modules/lit-html/",
+          "lit-html": "./modules/lit-html/lit-html.js",
           "jsonpath-plus/": "./modules/jsonpath-plus/",
           "chart.js/": "./modules/chart.js/",
           "chartjs-gauge/": "./modules/chartjs-gauge/",

@@ -2,7 +2,7 @@
   <div slot="header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
     <ui5-title>Details</ui5-title>
     <div>
-      <ui5-togglebutton design="Default" icon="unlocked" id="edit-button" style="vertical-align: middle">Edit</ui5-togglebutton>
+      <ui5-toggle-button design="Default" icon="unlocked" id="edit-button" style="vertical-align: middle">Edit</ui5-toggle-button>
       <ui5-button icon="delete" design="Negative" id="delete-button" style="vertical-align: middle">Remove zone</ui5-button>
       <ui5-button icon="refresh" id="refresh-button" style="vertical-align: middle">Refresh</ui5-button>
     </div>
@@ -10,6 +10,10 @@
   <div>
     <ui5-label style="vertical-align: middle" for="zone-name" show-colon>Zone name</ui5-label>
     <ui5-input style="vertical-align: middle" id="zone-name" data-value="name" data-readonly="@readonly"></ui5-input>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="zone-controller" show-colon>Zone controller (MAC address)</ui5-label>
+    <ui5-input style="vertical-align: middle" id="zone-controller" data-value="controller" data-readonly="@readonly"></ui5-input>
   </div>
 </ui5-panel>
 <ui5-tabcontainer class="full-width" fixed show-overflow>

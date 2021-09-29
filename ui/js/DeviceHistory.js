@@ -73,23 +73,24 @@ class AutoHomeDeviceHistory extends HTMLElement {
         let rows = container.assignedElements();
 
         var rowIdx = 0;
-        for( ; rowIdx < ( this.devices || [] ).length; ++rowIdx ) {
-            let device = this.devices[rowIdx];
+        for( ; rowIdx < ( readings.readings || [] ).length; ++rowIdx ) {
+            let deviceReadings = readings.readings[rowIdx];
+            let device = ( this.devices || [] ).filter( d => d.id === deviceReadings.sensor )[0] || {};
             let row = rows[rowIdx];
             if( row ) {
                 row.binding.update({
                     start: start,
                     end: end,
-                    device: device,
-                    readings: readings.readings
+                    title: `${device.name} - ${deviceReadings.type}`,
+                    readings: [ deviceReadings ]
                 });
             } else {
                 row = rowTemplate.cloneNode( true ).querySelector( 'div' );
                 row.binding = new Binding( row, {
                     start: start,
                     end: end,
-                    device: device,
-                    readings: readings.readings
+                    title: `${device.name} - ${deviceReadings.type}`,
+                    readings: [ deviceReadings ]
                 }, {
                     readOnly: true
                 });

@@ -17,11 +17,10 @@
 
 <template id="device-chart-template">
   <div>
-    <ui5-title data-bind="device.name"></ui5-title>
+    <ui5-title data-bind="title"></ui5-title>
     <autohome-history-chart
       data-starttime="start"
       data-endtime="end"
-      data-device="device"
       data-history="readings"
       ></autohome-history-chart>
   </div>

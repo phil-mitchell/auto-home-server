@@ -73,10 +73,17 @@ module.exports = class ZoneController {
         delete reqContext.requestBody.targets;
 
         let res = await zones.insert( reqContext.requestBody, { returnChanges: true }).run();
+        let zone = res.changes[0].new_val;
         reqContext.extraContext.store.aedes.publish({
-            topic: `homes/${reqContext.home.home.id}/zoneCreated`,
-            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            topic: `homes/${zone.home}/zoneCreated`,
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
             qos: 1
+        });
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/config`,
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
+            qos: 1,
+            retain: true
         });
         return res.changes[0].new_val;
     }
@@ -106,12 +113,19 @@ module.exports = class ZoneController {
             res = res.update( reqContext.requestBody, { returnChanges: 'always' });
         }
         res = await res.run();
+        zone = res.changes[0].new_val;
         reqContext.extraContext.store.aedes.publish({
             topic: `homes/${zone.home}/zones/${zone.id}/zoneUpdated`,
-            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
             qos: 1
         });
-        return res.changes[0].new_val;
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/config`,
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
+            qos: 1,
+            retain: true
+        });
+        return zone;
     }
 
     static async remove( reqContext ) {
@@ -125,6 +139,12 @@ module.exports = class ZoneController {
             topic: `homes/${zone.home}/zones/${zone.id}/zoneRemoved`,
             payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
             qos: 1
+        });
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/config`,
+            payload: Buffer.from( '', 'utf-8' ),
+            qos: 1,
+            retain: true
         });
 
         return res;

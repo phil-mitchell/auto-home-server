@@ -102,6 +102,9 @@ class AutoHomeDeviceTable extends HTMLElement {
                 });
             } else {
                 row = rowTemplate.cloneNode( true ).querySelector( 'ui5-table-row' );
+                row._getActiveElementTagName = function _localGetActiveElementTagName() {
+		    return this.getRootNode().activeElement.localName.toLocaleLowerCase();
+	        };
                 row.binding = new Binding( row, device, {
                     editable: !this.readonly
                 });

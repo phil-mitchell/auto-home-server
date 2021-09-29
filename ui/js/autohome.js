@@ -1,10 +1,10 @@
-//import '@ui5/webcomponents-fiori/dist/Assets.js';
 import '@ui5/webcomponents-icons/dist/json-imports/Icons.js';
 import '@ui5/webcomponents-fiori/dist/ShellBar.js';
 import '@ui5/webcomponents/dist/Button.js';
 import '@ui5/webcomponents/dist/Title.js';
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Card.js";
+import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/Popover.js";
 
 import clientAPI from './ClientAPI.js';
@@ -34,7 +34,7 @@ class AutoHomeApp extends HTMLElement {
             var menu = clientAPI.isLoggedIn() ?
                 this.shadowRoot.querySelector( '#user-menu' ) :
                 this.shadowRoot.querySelector( '#auth-menu' );
-            menu.openBy( event.detail.targetRef );
+            menu.showAt( event.detail.targetRef );
         });
         shellbar.addEventListener( 'menuItemClick', event => {
             clientAPI.setState( JSON.parse( event.detail.item.dataset.state ) );
@@ -173,23 +173,24 @@ class AutoHomeApp extends HTMLElement {
 
     handleProfileChange( reason ) {
         var shellbar = this.shadowRoot.querySelector( 'ui5-shellbar' );
-        var profile = shellbar.querySelector( 'ui5-avatar' );
+        var profile = shellbar.querySelector( 'ui5-avatar img' );
         var usermenu = this.shadowRoot.querySelector( '#user-menu' );
         var usermenuBindings = usermenu.querySelectorAll( '[data-bind]' );
 
+	var image = './img/guest.png';
         if( clientAPI.isLoggedIn() ) {
-            profile.image = clientAPI.profile.image;
+            image = clientAPI.profile.image;
             usermenuBindings.forEach( node => {
                 let field = node.dataset.bind;
                 let value = clientAPI.profile[field];
                 node.innerText = value;
             });
         } else {
-            profile.image = './img/guest.png';
             usermenuBindings.forEach( node => {
                 node.innerText = '';
             });
         }
+	profile.src = image;
 
         if( reason ) {
             this.showMessage( `You have been logged out: ${reason}`, 'Warning', 5000 );
@@ -212,8 +213,8 @@ class AutoHomeApp extends HTMLElement {
             for( let home of homes ) {
                 let card = template.cloneNode( true );
 
-                card.querySelector( 'ui5-card' ).heading = home.name;
-                card.querySelector( 'ui5-card' ).addEventListener( 'ui5-headerClick', () => {
+                card.querySelector( 'ui5-card ui5-card-header' ).titleText = home.name;
+                card.querySelector( 'ui5-card' ).addEventListener( 'click', () => {
                     clientAPI.setHome( home.id );
                 });
                 this.appendChild( card );

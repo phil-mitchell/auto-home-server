@@ -51,5 +51,7 @@ services:
       - brewing
     volumes:
       - .:/app
+      - ../aedes:/aedes
+      - ../mqtt-packet:/mqtt-packet
     working_dir: /app
     command: "node ./app.js"

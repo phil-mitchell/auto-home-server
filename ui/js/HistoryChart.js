@@ -15,7 +15,6 @@ class HistoryChart extends HTMLElement {
         this.shadowRoot.innerHTML = template;
 
         this._upgradeProperty( 'history' );
-        this._upgradeProperty( 'device' );
         this._upgradeProperty( 'starttime' );
         this._upgradeProperty( 'endtime' );
 
@@ -54,7 +53,7 @@ class HistoryChart extends HTMLElement {
             return;
         }
 
-        let devices = ( this._history || [] ).filter( h => this._device.id === h.sensor );
+        let devices = ( this._history || [] );
         let readings = [];
         let targets = [];
         let steppedLine = false;
@@ -117,15 +116,6 @@ class HistoryChart extends HTMLElement {
         this.refresh();
     }
 
-    get device() {
-        return this._device;
-    }
-
-    set device( value ) {
-        this._device = value;
-        this.refresh();
-    }
-    
     get starttime() {
         return this._start;
     }

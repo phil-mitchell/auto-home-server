@@ -73,10 +73,17 @@ module.exports = class DeviceController {
         delete reqContext.requestBody.targets;
 
         let res = await devices.insert( reqContext.requestBody, { returnChanges: true }).run();
+        let device = res.changes[0].new_val;
         reqContext.extraContext.store.aedes.publish({
             topic: `homes/${zone.home}/zones/${zone.id}/deviceCreated`,
-            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            payload: Buffer.from( JSON.stringify( device ), 'utf-8' ),
             qos: 1
+        });
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/devices/${device.id}/config`,
+            payload: Buffer.from( JSON.stringify( device ), 'utf-8' ),
+            qos: 1,
+            retain: true
         });
         return res.changes[0].new_val;
     }
@@ -111,6 +118,12 @@ module.exports = class DeviceController {
             payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
             qos: 1
         });
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${reqContext.home.home.id}/zones/${device.zone}/devices/${device.id}/config`,
+            payload: Buffer.from( JSON.stringify( res.changes[0].new_val ), 'utf-8' ),
+            qos: 1,
+            retain: true
+        });
         return res.changes[0].new_val;
     }
 
@@ -126,6 +139,12 @@ module.exports = class DeviceController {
             topic: `homes/${reqContext.home.home.id}/zones/${device.zone}/deviceRemoved`,
             payload: Buffer.from( JSON.stringify( device ), 'utf-8' ),
             qos: 1
+        });
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${reqContext.home.home.id}/zones/${device.zone}/devices/${device.id}/config`,
+            payload: Buffer.from( '', 'utf-8' ),
+            qos: 1,
+            retain: true
         });
 
         return res;
@@ -217,7 +236,7 @@ module.exports = class DeviceController {
         let readings = {};
 
         for( let result of results ) {
-            let key = `${result.zone}/${result.sensor}`;
+            let key = `${result.zone}/${result.sensor}/${result.type}`;
             readings[key] = readings[key] || {
                 zone: result.zone,
                 sensor: result.sensor,
@@ -246,6 +265,10 @@ module.exports = class DeviceController {
 
         let device_path = reqContext.requestObjectPath.indexOf( 'devices' );
 
+        if( reqContext.requestObjectPath[device_path+2] === 'config' ) {
+            return;
+        }
+        
         let type = reqContext.requestObjectPath[device_path+2] || reading.type ||
             ( device || {}).type || 'unknown';
 

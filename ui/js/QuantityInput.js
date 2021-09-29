@@ -118,6 +118,10 @@ class QuantityInput extends Input {
             }
         }
 
+        if( quantity.unit != null ) {
+            this._unit = quantity.unit;
+        }
+
         let quantitymin = this.quantitymin;
         if( quantitymin != null && typeof( quantitymin.convert ) !== 'function' && this.quantitytype ) {
             quantitymin = new Quantity( this.quantitytype, quantitymin );

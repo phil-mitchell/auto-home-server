@@ -1,4 +1,4 @@
-<ui5-table show-no-data no-data-text="No Data">
+<ui5-table show-no-data no-data-text="No Data" mode="SingleSelect">
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Name</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Direction</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Type</ui5-table-column>
@@ -9,7 +9,7 @@
 </ui5-table>
 
 <template id="table-row-template">
-  <ui5-table-row>
+  <ui5-table-row type="Active">
     <ui5-table-cell style="white-space: nowrap">
       <ui5-label style="width:fit-content;vertical-align:middle" data-bind="name"></ui5-label>
     </ui5-table-cell>

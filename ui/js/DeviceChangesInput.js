@@ -26,12 +26,13 @@ class DeviceChangesInput extends MultiInput {
 
         valueHelp.binding.data = JSON.parse( JSON.stringify( valueHelp.change || {
             device: ( ( this.devices || [] )[0] || {}).id,
+            type: 'temperature',
             direction: 'none',
             data: {}
         }) );
 
         this.updateValueHelp();
-        valueHelp.open( event.target );
+        valueHelp.showAt( event.target );
     }
 
     saveValueHelp( event ) {
@@ -107,7 +108,7 @@ class DeviceChangesInput extends MultiInput {
                 name: change.device
             };
 
-            item.setAttribute( 'text', `${device.name}=${value}` );
+            item.setAttribute( 'text', `${device.name}:${change.type}=${value}` );
             item.setAttribute( 'slot', 'tokens' );
             if( !this.showValueHelpIcon ) {
                 item.setAttribute( 'readonly', true );

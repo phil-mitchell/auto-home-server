@@ -15,8 +15,6 @@ class ChangesInput extends MultiInput {
 
     updateValueHelp() {
         let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
-        let deviceId = valueHelp.binding.data.device;
-        let device = this.devices.filter( d => d.id === deviceId )[0] || {};
 
         valueHelp.binding.update( valueHelp.binding.data, {
             editable: this.showValueHelpIcon
@@ -24,12 +22,12 @@ class ChangesInput extends MultiInput {
 
         let inputs = valueHelp.querySelectorAll( 'quantity-input' );
         for( let input of inputs ) {
-            if( input.quantitytype !== device.type ) {
+            if( input.quantitytype !== valueHelp.binding.data.type ) {
                 if( input.quantitytype ) {
                     input.quantity = Object.assign( input.quantity, { unit: null });
                 }
             
-                input.quantitytype = device.type;
+                input.quantitytype = valueHelp.binding.data.type;
             }
         }
     }
@@ -46,6 +44,7 @@ class ChangesInput extends MultiInput {
 
         valueHelp.binding.data = JSON.parse( JSON.stringify( valueHelp.change || {
             device: ( this._devices[0] || {}).id,
+            type: 'temperature',
             value: {
                 value: null,
                 unit: null
@@ -54,7 +53,7 @@ class ChangesInput extends MultiInput {
         }) );
 
         this.updateValueHelp();
-        valueHelp.open( event.target );
+        valueHelp.showAt( event.target );
     }
 
     saveValueHelp( event ) {
@@ -132,9 +131,10 @@ class ChangesInput extends MultiInput {
             for( let device of ( this._devices || [] ) ) {
                 if( change.device === device.id ) {
                     try {
-                        value = new Quantity( device.type, change.value ).toString();
+                        value = new Quantity( change.type, change.value ).toString();
                     } catch( e ) {
                     }
+                    break;
                 }
             }
 
@@ -142,7 +142,7 @@ class ChangesInput extends MultiInput {
                 name: change.device
             };
 
-            item.setAttribute( 'text', `${device.name}=${value}` );
+            item.setAttribute( 'text', `${device.name}:${change.type}=${value}` );
             item.setAttribute( 'slot', 'tokens' );
             if( !this.showValueHelpIcon ) {
                 item.setAttribute( 'readonly', true );

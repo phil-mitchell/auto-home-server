@@ -93,7 +93,7 @@ class AutoHomeHomeEditor extends BaseEditor {
         this.populateList(
             zones, '#zones-panel', 'zone-template', 'autohome-zone-card',
             this.editButton.pressed, ( card, value ) => {
-                card.addEventListener( 'ui5-headerClick', () => {
+                card.addEventListener( 'click', () => {
                     clientAPI.setZone( value );
                 });
             });
@@ -150,7 +150,7 @@ class AutoHomeHomeEditor extends BaseEditor {
         this.populateList(
             members, '#members-panel', 'member-template', 'ui5-card',
             this.editButton.pressed, ( card, value ) => {
-                card.addEventListener( 'ui5-headerClick', () => {
+                card.addEventListener( 'click', () => {
                     clientAPI.setMember( value );
                 });
             });

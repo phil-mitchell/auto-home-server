@@ -28,8 +28,19 @@ class BindableSelect extends Select {
     async refresh() {
         let value = this._value;
         let options = this.querySelectorAll( 'ui5-option' );
+        let selectedOption = null;
         for( let option of options ) {
             option.selected = ( option.value === value );
+            selectedOption = option;
+        }
+        if( selectedOption == null && options.length > 0 ) {
+            options[0].selected = true;
+        }
+        if( this.value !== this._value ) {
+            this._value = this.value;
+            this.fireEvent( 'change', {
+                selectedOption: selectedOption
+            });
         }
     }
 

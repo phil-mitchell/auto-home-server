@@ -15,6 +15,19 @@
     </bindable-select>
   </div>
   <div>
+    <ui5-label style="vertical-align: middle" for="device-type" show-colon>Value type</ui5-label>
+    <bindable-select
+      id="device-type"
+      style="width:fit-content;vertical-align:middle"
+      data-value="type"
+      data-disabled="@readonly">
+      <ui5-option value="humidex">Humidex</ui5-option>
+      <ui5-option value="humidity">Humidity</ui5-option>
+      <ui5-option value="switch">Switch</ui5-option>
+      <ui5-option value="temperature">Temperature</ui5-option>
+    </bindable-select>
+  </div>
+  <div>
     <ui5-label style="vertical-align: middle" for="direction-input" show-colon>Direction</ui5-label>
     <bindable-select
       id="direction-input"

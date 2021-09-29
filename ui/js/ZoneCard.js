@@ -1,4 +1,5 @@
 import Card from "@ui5/webcomponents/dist/Card.js";
+import "@ui5/webcomponents/dist/CardHeader.js";
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -21,10 +22,15 @@ class AutoHomeZoneCard extends Card {
             this.removeChild( this.firstChild );
         }
 
+        let header = document.createElement( 'ui5-card-header' );
+        header.setAttribute( 'interactive', 'true' );
+        header.setAttribute( 'title-text', ( this.zone || {}).name );
+        this.appendChild( header );
+            
         let image = document.createElement( 'img' );
         image.setAttribute( 'src', './img/zone.png' );
         image.setAttribute( 'slot', 'avatar' );
-        this.appendChild( image );
+        header.appendChild( image );
 
         if( this.zone && this.zone.devices ) {
             for( let device of this.zone.devices ) {
