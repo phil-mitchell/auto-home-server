@@ -64,7 +64,7 @@ class BaseEditor extends HTMLElement {
         let popover = this.shadowRoot.getElementById( 'confirm-delete-popover' );
         this.clearMessages( popover.querySelector( '.messages' ) );
         popover.callback = callback;
-        popover.open( event.target );
+        popover.showAt( event.target );
     }
 
     async doDelete() {

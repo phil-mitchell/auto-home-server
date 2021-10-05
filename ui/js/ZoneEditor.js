@@ -52,7 +52,7 @@ class AutoHomeZoneEditor extends BaseEditor {
         let popover = this.shadowRoot.getElementById( 'add-device-popover' );
         this.clearMessages( popover );
         popover.querySelector( '#nameInput' ).value = '';
-        this.shadowRoot.getElementById( 'add-device-popover' ).open( this.addDeviceButton );
+        this.shadowRoot.getElementById( 'add-device-popover' ).showAt( this.addDeviceButton );
     }
 
     async submitNewDevice() {
