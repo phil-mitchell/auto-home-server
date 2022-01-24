@@ -11,11 +11,13 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/TabContainer.js";
 import "@ui5/webcomponents/dist/Tab.js";
 import "@ui5/webcomponents-fiori/dist/Bar.js";
+import "@ui5/webcomponents/dist/TimePicker.js";
 
 import './DeviceTable.js';
 import './DeviceHistory.js';
 import './DeviceChangesInput.js';
 import './DeviceCalibrationsInput.js';
+import './ChangesInput.js';
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -42,6 +44,7 @@ class AutoHomeDeviceEditor extends BaseEditor {
 
     handleDevicesChange( devices ) {
         this.shadowRoot.querySelector( 'device-changes-input' ).devices = devices;
+        this.shadowRoot.querySelector( 'schedule-changes-input' ).devices = devices;
     }
 
     async connectedCallback() {
@@ -49,9 +52,10 @@ class AutoHomeDeviceEditor extends BaseEditor {
             template = await ( await fetch( './tmpl/DeviceEditor.tmpl.html' ) ).text();
         }
 
-        await super.connectedCallback();
-
-        clientAPI.on( 'devicesChange', this.handleDevicesChange.bind( this ) );
+        if( !this.shadowRoot ) {
+            await super.connectedCallback();
+            clientAPI.on( 'devicesChange', this.handleDevicesChange.bind( this ) );
+        }
 
         this.refresh();
     }

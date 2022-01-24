@@ -7,8 +7,11 @@ class BindableSelect extends Select {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
-        this._upgradeProperty( 'value' );
+        if( !this._inited ) {
+            await super.connectedCallback();
+            this._inited = true;
+            this._upgradeProperty( 'value' );
+        }
         this.refresh();
     }
 
@@ -26,18 +29,24 @@ class BindableSelect extends Select {
     }
 
     async refresh() {
+        if( !this._inited ) {
+            return;
+        }
         let value = this._value;
         let options = this.querySelectorAll( 'ui5-option' );
         let selectedOption = null;
         for( let option of options ) {
             option.selected = ( option.value === value );
-            selectedOption = option;
+            if( option.value === value ) {
+                selectedOption = option;
+            }
         }
         if( selectedOption == null && options.length > 0 ) {
             options[0].selected = true;
+            selectedOption = options[0];
         }
-        if( this.value !== this._value ) {
-            this._value = this.value;
+        if( selectedOption && selectedOption.value !== this._value ) {
+            this._value = selectedOption.value;
             this.fireEvent( 'change', {
                 selectedOption: selectedOption
             });

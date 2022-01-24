@@ -78,27 +78,30 @@ class DeviceCalibrationsInput extends MultiInput {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
+        if( !this._initialized ) {
+            await super.connectedCallback();
 
-        if( !template ) {
-            template = await ( await fetch( './tmpl/DeviceCalibrationsInput.tmpl.html' ) ).text();
+            if( !template ) {
+                template = await ( await fetch( './tmpl/DeviceCalibrationsInput.tmpl.html' ) ).text();
+            }
+
+            var children = document.createElement( 'div' );
+            children.innerHTML = template;
+            
+            this.shadowRoot.appendChild( children );
+
+            let valueHelp = this.shadowRoot.querySelector( '#calibration-editor' );
+            valueHelp.binding = new Binding( valueHelp, {}, { editable: this.showValueHelpIcon });
+            valueHelp.binding.on( 'change', this.updateValueHelp.bind( this ) );
+
+            valueHelp.querySelector( '#save-calibration' ).addEventListener( 'click', this.saveValueHelp.bind( this ) );
+            valueHelp.querySelector( '#delete-calibration' ).addEventListener( 'click', this.deleteValueHelp.bind( this ) );
+
+            this._upgradeProperty( 'calibrations' );
+
+            this.addEventListener( 'value-help-trigger', this.openValueHelp.bind( this ) );
+            this._initialized = true;
         }
-
-        var children = document.createElement( 'div' );
-        children.innerHTML = template;
-        
-        this.shadowRoot.appendChild( children );
-
-        let valueHelp = this.shadowRoot.querySelector( '#calibration-editor' );
-        valueHelp.binding = new Binding( valueHelp, {}, { editable: this.showValueHelpIcon });
-        valueHelp.binding.on( 'change', this.updateValueHelp.bind( this ) );
-
-        valueHelp.querySelector( '#save-calibration' ).addEventListener( 'click', this.saveValueHelp.bind( this ) );
-        valueHelp.querySelector( '#delete-calibration' ).addEventListener( 'click', this.deleteValueHelp.bind( this ) );
-
-        this._upgradeProperty( 'calibrations' );
-
-        this.addEventListener( 'value-help-trigger', this.openValueHelp.bind( this ) );
     }
 
     refresh() {

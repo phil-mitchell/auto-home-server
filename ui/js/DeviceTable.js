@@ -23,26 +23,30 @@ class AutoHomeDeviceTable extends HTMLElement {
     constructor() {
         super();
 
-        this.shadow = this.attachShadow({ mode: 'open' });
     }
 
     async connectedCallback() {
         if( !template ) {
             template = await ( await fetch( './tmpl/DeviceTable.tmpl.html' ) ).text();
         }
-        this.shadow.innerHTML = template;
 
-        var container = this.shadowRoot.querySelector( 'ui5-table' );
-        container.addEventListener( 'row-click', event => {
-            let bubbleEvent = new CustomEvent( 'row-click', {
-                detail: event.detail,
-                target: event.target,
-                timeStamp: event.timeStamp
+        if( !this.shadowRoot ) {
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.innerHTML = template;
+
+            var container = this.shadowRoot.querySelector( 'ui5-table' );
+            container.addEventListener( 'row-click', event => {
+                let bubbleEvent = new CustomEvent( 'row-click', {
+                    detail: event.detail,
+                    target: event.target,
+                    timeStamp: event.timeStamp
+                });
+                this.dispatchEvent( bubbleEvent );
             });
-            this.dispatchEvent( bubbleEvent );
-        });
 
-        this._upgradeProperty( 'readonly' );
+            this._upgradeProperty( 'readonly' );
+        }
+
         this.refresh();
     }
 
@@ -55,8 +59,13 @@ class AutoHomeDeviceTable extends HTMLElement {
     }
     
     set devices( value ) {
-        this._devices = value;
-        this.refresh();
+        if( Array.isArray( value ) ) {
+            this._devices = value.map( device => {
+                device.isOutput = device.direction === 'output';
+                return device;
+            });
+            this.refresh();
+        }
     }
 
     get devices() {
@@ -83,6 +92,34 @@ class AutoHomeDeviceTable extends HTMLElement {
         this.refresh();
     }
 
+    async triggerDevice( device, event ) {
+        await clientAPI.addSensorReading({
+            time: new Date().toISOString(),
+            type: 'button',
+            value: {
+                value: 1,
+                unit: ''
+            }
+        }, device );
+
+        await clientAPI.addSensorReading({
+            time: new Date().toISOString(),
+            type: 'button',
+            value: {
+                value: 0,
+                unit: ''
+            }
+        }, device );
+
+        let bubbleEvent = new CustomEvent( 'triggered', {
+            detail: device,
+            target: event.target,
+            timeStamp: event.timeStamp
+        });
+        console.log( bubbleEvent ); 
+        this.dispatchEvent( bubbleEvent );
+    }
+
     async refresh() {
         var container = this.shadowRoot.querySelector( 'ui5-table' );
         if( !container ) {
@@ -92,9 +129,49 @@ class AutoHomeDeviceTable extends HTMLElement {
         let rowTemplate = this.shadowRoot.getElementById( 'table-row-template' ).content;
         let rows = container.querySelectorAll( 'ui5-table-row' );
 
+        let entries = [];
+        for( let device of this.devices || [] ) {
+            let measurements = {};
+            for( let measurement of ( device.current || [{}] ) ) {
+                measurements[measurement.type] = measurements[measurement.type] || {
+                    type: measurement.type
+                };
+
+                measurements[measurement.type].current = measurement;
+            }
+
+            /*
+            for( let measurement of ( device.target || [] ) ) {
+                measurements[measurement.type] = measurements[measurement.type] || {
+                    type: measurement.type
+                };
+
+                measurements[measurement.type].target = measurement;
+            }
+            */
+
+            measurements = Object.values( measurements ) || [];
+            if( measurements.length === 0 ) {
+                measurements.push({});
+            }
+
+            for( let measurement of measurements ) {
+                entries.push({
+                    id: device.id,
+                    name: device.name,
+                    direction: device.direction,
+                    notTriggerable: device.direction === 'output' || device.interface.type !== 'gpio',
+                    interface: device.interface,
+                    type: measurement.type,
+                    current: measurement.current,
+                    target: device.target //measurement.target
+                });
+            }
+        }
+
         var rowIdx = 0;
-        for( ; rowIdx < ( this.devices || [] ).length; ++rowIdx ) {
-            let device = this.devices[rowIdx];
+        for( ; rowIdx < entries.length; ++rowIdx ) {
+            let device = entries[rowIdx];
             let row = rows[rowIdx];
             if( row ) {
                 row.binding.update( device, {
@@ -107,6 +184,9 @@ class AutoHomeDeviceTable extends HTMLElement {
 	        };
                 row.binding = new Binding( row, device, {
                     editable: !this.readonly
+                });
+                row.querySelector( '#trigger-button' ).addEventListener( 'click', event => {
+                    this.triggerDevice( row.binding.data, event );
                 });
                 row.binding.on( 'change', () => {
                     clientAPI.saveZone();

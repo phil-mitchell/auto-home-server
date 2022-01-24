@@ -10,12 +10,14 @@ import "@ui5/webcomponents/dist/TextArea.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/TabContainer.js";
 import "@ui5/webcomponents/dist/Tab.js";
+import "@ui5/webcomponents/dist/TextArea.js";
 import "@ui5/webcomponents-fiori/dist/Bar.js";
 
 import './ScheduleTable.js';
 import './OverrideTable.js';
 import './DeviceTable.js';
 import './DeviceHistory.js';
+import './ZoneLogs.js';
 
 import clientAPI from './ClientAPI.js';
 import Binding from './Binding.js';
@@ -116,23 +118,26 @@ class AutoHomeZoneEditor extends BaseEditor {
             template = await ( await fetch( './tmpl/ZoneEditor.tmpl.html' ) ).text();
         }
 
-        clientAPI.on( 'devicesChange', this.handleDevicesChange.bind( this ) );
+        if( !this.shadowRoot ) {
+            clientAPI.on( 'devicesChange', this.handleDevicesChange.bind( this ) );
 
-        await super.connectedCallback();
+            await super.connectedCallback();
 
-        this.shadowRoot.querySelector( 'autohome-device-table' ).addEventListener( 'row-click', this.selectDevice.bind( this ) );
+            this.shadowRoot.querySelector( 'autohome-device-table' ).addEventListener( 'row-click', this.selectDevice.bind( this ) );
         
-        this.addDeviceButton = this.shadowRoot.getElementById( 'add-device-button' );
-        this.addDeviceButton.addEventListener( 'click', this.addDevice.bind( this ) );
-        this.shadowRoot.getElementById( 'add-device-popover-submit' ).addEventListener( 'click', this.submitNewDevice.bind( this ) );
-        
-        this.addScheduleButton = this.shadowRoot.getElementById( 'add-schedule-button' );
-        this.addScheduleButton.addEventListener( 'click', this.addSchedule.bind( this ) );
+            this.addDeviceButton = this.shadowRoot.getElementById( 'add-device-button' );
+            this.addDeviceButton.addEventListener( 'click', this.addDevice.bind( this ) );
+            this.shadowRoot.querySelector( 'autohome-device-table' ).addEventListener( 'triggered', this.refresh.bind( this ) );
 
-        this.addOverrideButton = this.shadowRoot.getElementById( 'add-override-button' );
-        this.addOverrideButton.addEventListener( 'click', this.addOverride.bind( this ) );
-        
-        
+            this.shadowRoot.getElementById( 'add-device-popover-submit' ).addEventListener( 'click', this.submitNewDevice.bind( this ) );
+
+            this.addScheduleButton = this.shadowRoot.getElementById( 'add-schedule-button' );
+            this.addScheduleButton.addEventListener( 'click', this.addSchedule.bind( this ) );
+
+            this.addOverrideButton = this.shadowRoot.getElementById( 'add-override-button' );
+            this.addOverrideButton.addEventListener( 'click', this.addOverride.bind( this ) );
+        }
+
         this.refresh();
     }
 

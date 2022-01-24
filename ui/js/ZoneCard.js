@@ -11,9 +11,7 @@ class AutoHomeZoneCard extends Card {
 
     async connectedCallback() {
         await super.connectedCallback();
-
         this._upgradeProperty( 'zone' );
-
         this.refresh();
     }
 

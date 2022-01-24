@@ -37,6 +37,7 @@
                     "calibration": {
                         "type": "object",
                         "properties": {
+                            "type": { "type": "string" },
                             "value": { "type": "number" },
                             "unit": { "type": "string" }
                         }
@@ -44,6 +45,7 @@
                     "threshold": {
                         "type": "object",
                         "properties": {
+                            "type": { "type": "string" },
                             "value": { "type": "number" },
                             "unit": { "type": "string" }
                         }
@@ -63,37 +65,84 @@
             "required": [ "type", "address" ],
             "additionalProperties": false
         },
-        "current": {
-            "readOnly": true,
+        "override": {
             "type": "object",
             "properties": {
-                "time": { "type": "string", "format": "date-time" },
-                "value": {
+                "name": { "type": "string", "default": "" },
+                "duration": {
                     "type": "object",
                     "properties": {
-                        "value": { "type": "number" },
-                        "unit": { "type": "string" }
-                    }
+                        "value": { "type": "number", "default": 0 },
+                        "unit": { "type": "string", "default": "hour" }
+                    },
+                    "required": [ "value" ],
+                    "additionalProperties": false
                 },
-                "data": { "type": "object" }
+                "changes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "device": { "type": "string" },
+                            "type": { "type": "string" },
+                            "value": {
+                                "type": "object",
+                                "properties": {
+                                    "value": { "type": "number" },
+                                    "unit": { "type": "string" }
+                                },
+                                "required": [ "value" ],
+                                "additionalProperties": false
+                            },
+                            "data": { "type": "object" }
+                        },
+                        "required": [ "device", "value" ],
+                        "additionalProperties": false
+                    }
+                }
             },
+            "required": [ "name", "duration" ],
             "additionalProperties": false
+        },
+        "current": {
+            "readOnly": true,
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "time": { "type": "string", "format": "date-time" },
+                    "type": { "type": "string" },
+                    "value": {
+                        "type": "object",
+                        "properties": {
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" }
+                        }
+                    },
+                    "data": { "type": "object" }
+                },
+                "additionalProperties": false
+            }
         },
         "target": {
             "readOnly": true,
-            "type": "object",
-            "properties": {
-                "until": { "type": "string", "format": "date-time" },
-                "value": {
-                    "type": "object",
-                    "properties": {
-                        "value": { "type": "number" },
-                        "unit": { "type": "string" }
-                    }
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "until": { "type": "string", "format": "date-time" },
+                    "type": { "type": "string" },
+                    "value": {
+                        "type": "object",
+                        "properties": {
+                            "value": { "type": "number" },
+                            "unit": { "type": "string" }
+                        }
+                    },
+                    "data": { "type": "object" }
                 },
-                "data": { "type": "object" }
-            },
-            "additionalProperties": false
+                "additionalProperties": false
+            }
         },
         "zone": { "$ref": "zone.json#/properties/id" },
     },

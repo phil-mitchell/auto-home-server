@@ -164,28 +164,32 @@ module.exports = class DeviceController {
             let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
             let filter = reqContext.requestBody;
 
-            let query = `select time, value, unit, data from sensor_readings where ` +
+            let query = `select time, type, value, unit, data from sensor_readings where ` +
                 `zone = ${Influx.escape.stringLit( zone.id )} and ` +
                 `sensor = ${Influx.escape.stringLit( value.id )} ` +
-                `order by time desc limit 1`;
+                `group by type order by time desc limit 1`;
 
-            value.current = ( await influx.query( query, { database: influxDatabaseName }) )[0] || {};
-            if( value.current.value != null ) {
-                value.current.value = {
-                    value: value.current.value,
-                    unit: value.current.unit
-                };
-                delete value.current.unit;
-            }
-            try {
-                value.current.data = JSON.parse( value.current.data || '{}' );
-            } catch( e ) {
-                value.current.data = {};
+            value.override = value.override || { duration: { value: 0, unit: 'hour' } };
+            value.changes = value.changes || [];
+            value.current = ( await influx.query( query, { database: influxDatabaseName }) ) || [];
+            for( let current of value.current ) {
+                if( current.value != null ) {
+                    current.value = {
+                        value: current.value,
+                        unit: current.unit
+                    };
+                    delete current.unit;
+                }
+                try {
+                    current.data = JSON.parse( current.data || '{}' );
+                } catch( e ) {
+                    current.data = {};
+                }
             }
 
 
             let targets = ZoneController.computeCurrentTargets( zone, home.timezone );
-            value.target = targets[value.id] || {};
+            value.target = targets[value.id] || [];
         }
         return value;
     }
@@ -268,11 +272,12 @@ module.exports = class DeviceController {
         if( reqContext.requestObjectPath[device_path+2] === 'config' ) {
             return;
         }
-        
-        let type = reqContext.requestObjectPath[device_path+2] || reading.type ||
+
+        let type = reading.type || reqContext.requestObjectPath[device_path+2] ||
             ( device || {}).type || 'unknown';
 
-        let timestamp = new Date( reading.time ).getTime() * 1000000;
+        let readingDate = new Date( reading.time );
+        let timestamp = readingDate.getTime() * 1000000;
 
         let tags = {
             zone: zone,
@@ -309,6 +314,35 @@ module.exports = class DeviceController {
                 ]
             } ]
         } );
+
+        if( device.override && reading.value.value ) {
+            let duration = device.override.duration || { value: 0, unit: 'second' };
+            switch( duration.unit ) {
+            case'week':
+                duration = duration.value * 604800;
+                break;
+            case'day':
+                duration = duration.value * 86400;
+                break;
+            case'hour':
+                duration = duration.value * 3600;
+                break;
+            case'minute':
+                duration = duration.value * 60;
+                break;
+            default:
+                duration = duration.value;
+            }
+
+            if( duration > 0 ) {
+                await ZoneController.addOverride( reqContext, {
+                    changes: device.override.changes,
+                    name: device.override.name,
+                    start: new Date( readingDate ).toISOString(),
+                    end: new Date( readingDate.getTime() + ( duration * 1000 ) ).toISOString()
+                });
+            }
+        }
     }
 
     static async callOperation( reqContext ) {

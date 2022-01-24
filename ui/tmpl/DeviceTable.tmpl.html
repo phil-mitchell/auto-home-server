@@ -1,11 +1,13 @@
 <ui5-table show-no-data no-data-text="No Data" mode="SingleSelect">
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Name</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Direction</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Interface</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Type</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Current</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Updated</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Target</ui5-table-column>
   <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Until</ui5-table-column>
+  <ui5-table-column slot="columns" style="width:fit-content" min-width="5rem">Action</ui5-table-column>
 </ui5-table>
 
 <template id="table-row-template">
@@ -15,6 +17,9 @@
     </ui5-table-cell>
     <ui5-table-cell style="white-space: nowrap">
       <ui5-label style="width:fit-content;vertical-align:middle" data-bind="direction"></ui5-label>
+    </ui5-table-cell>
+    <ui5-table-cell style="white-space: nowrap">
+      <ui5-label style="width:fit-content;vertical-align:middle" data-bind="interface.type"></ui5-label>
     </ui5-table-cell>
     <ui5-table-cell style="white-space: nowrap">
       <ui5-label style="width:fit-content;vertical-align:middle" data-bind="type"></ui5-label>
@@ -52,6 +57,9 @@
         data-isotime="target.until"
         readonly>
       </local-datetime-picker>
+    </ui5-table-cell>
+    <ui5-table-cell style="white-space: nowrap">
+      <ui5-button id="trigger-button" data-disabled="notTriggerable">Trigger</ui5-button>
     </ui5-table-cell>
   </ui5-table-row>
 </template>

@@ -8,29 +8,31 @@ const template = `<div style="width: 100%; display: inline-block"><canvas height
 class HistoryChart extends HTMLElement {
     constructor() {
         super();
-        this.attachShadow({ mode: 'open' });
     }
 
     async connectedCallback() {
-        this.shadowRoot.innerHTML = template;
+        if( !this.shadowRoot ) {
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.innerHTML = template;
 
-        this._upgradeProperty( 'history' );
-        this._upgradeProperty( 'starttime' );
-        this._upgradeProperty( 'endtime' );
+            this._upgradeProperty( 'history' );
+            this._upgradeProperty( 'starttime' );
+            this._upgradeProperty( 'endtime' );
 
-        let canvas = this.shadowRoot.querySelector( 'canvas' );
-        this.chart = new Chart( canvas, {
-            type: 'line',
-            data: {},
-            options: {
-                scales: {
-                    xAxes: [ {
-                        type: 'time',
-                        position: 'bottom'
-                    } ]
+            let canvas = this.shadowRoot.querySelector( 'canvas' );
+            this.chart = new Chart( canvas, {
+                type: 'line',
+                data: {},
+                options: {
+                    scales: {
+                        xAxes: [ {
+                            type: 'time',
+                            position: 'bottom'
+                        } ]
+                    }
                 }
-            }
-        });
+            });
+        }
 
         this.refresh();
     }
@@ -58,7 +60,7 @@ class HistoryChart extends HTMLElement {
         let targets = [];
         let steppedLine = false;
         for( let device of devices ) {
-            steppedLine = steppedLine || device.type === 'switch';
+            steppedLine = steppedLine || device.type === 'switch' || device.type === 'button';
             let deviceReadings = [];
             if( this.starttime ) {
                 deviceReadings.push({

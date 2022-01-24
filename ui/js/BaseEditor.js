@@ -13,7 +13,6 @@ class BaseEditor extends HTMLElement {
         super();
         this.bindingPath = bindingPath;
         this.changeEvent = changeEvent;
-        this.attachShadow({ mode: 'open' });
     }
 
     get template() {
@@ -134,35 +133,38 @@ class BaseEditor extends HTMLElement {
             template = await ( await fetch( './tmpl/BaseEditor.tmpl.html' ) ).text();
         }
 
-        this.shadowRoot.innerHTML = ( this.template || '' ) + template;
+        if( !this.shadowRoot ) {
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.innerHTML = ( this.template || '' ) + template;
 
-        this.editButton = this.shadowRoot.getElementById( 'edit-button' );
-        if( this.editButton ) {
-            this.editButton.addEventListener( 'click', this.refresh.bind( this ) );
-        }
-
-        if( this.bindingPath != null ) {
-            this.binding = new Binding( this.shadowRoot, clientAPI, {
-                path: this.bindingPath,
-                editable: this.editButton && this.editButton.pressed
-            });
-            this.binding.on( 'change', this.handleErrors.bind( this, this.save ) );
-
-            if( this.changeEvent != null ) {
-                clientAPI.on( this.changeEvent, () => {
-                    this.binding.update( clientAPI, {
-                        editable: this.editButton && this.editButton.pressed
-                    });
-                });
+            this.editButton = this.shadowRoot.getElementById( 'edit-button' );
+            if( this.editButton ) {
+                this.editButton.addEventListener( 'click', this.refresh.bind( this ) );
             }
+
+            if( this.bindingPath != null ) {
+                this.binding = new Binding( this.shadowRoot, clientAPI, {
+                    path: this.bindingPath,
+                    editable: this.editButton && this.editButton.pressed
+                });
+                this.binding.on( 'change', this.handleErrors.bind( this, this.save ) );
+
+                if( this.changeEvent != null ) {
+                    clientAPI.on( this.changeEvent, () => {
+                        this.binding.update( clientAPI, {
+                            editable: this.editButton && this.editButton.pressed
+                        });
+                    });
+                }
+            }
+
+            this.editButton = this.shadowRoot.getElementById( 'edit-button' );
+            this.editButton.addEventListener( 'click', this.refresh.bind( this ) );
+
+            this.shadowRoot.getElementById( 'refresh-button' ).addEventListener( 'click', this.refresh.bind( this ) );
+            this.shadowRoot.getElementById( 'delete-button' ).addEventListener( 'click', this.confirmDelete.bind( this, this.delete.bind( this ) ) );
+            this.shadowRoot.getElementById( 'confirm-delete-popover-submit' ).addEventListener( 'click', this.doDelete.bind( this ) );
         }
-
-        this.editButton = this.shadowRoot.getElementById( 'edit-button' );
-        this.editButton.addEventListener( 'click', this.refresh.bind( this ) );
-
-        this.shadowRoot.getElementById( 'refresh-button' ).addEventListener( 'click', this.refresh.bind( this ) );
-        this.shadowRoot.getElementById( 'delete-button' ).addEventListener( 'click', this.confirmDelete.bind( this, this.delete.bind( this ) ) );
-        this.shadowRoot.getElementById( 'confirm-delete-popover-submit' ).addEventListener( 'click', this.doDelete.bind( this ) );
     }
 
     async refresh() {

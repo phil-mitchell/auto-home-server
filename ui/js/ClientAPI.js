@@ -396,6 +396,9 @@ class AutoHomeClient extends ClientAPI{
         }
         try {
             let devices = await clientAPI['get /api/homes/{pathParam0}/zones/{pathParam1}/devices']( this.home.id, this.zone.id );
+            for( let device of devices ) {
+                device.isOutput = device.direction === 'output';
+            }
             if( this.device && devices.filter( b => b.id === this.device.id ).length === 0 ) {
                 this.setDevice( null );
             }
@@ -482,6 +485,11 @@ class AutoHomeClient extends ClientAPI{
         });
     }
 
+    async addSensorReading( reading, device ) {
+        let params = [ this.home.id, this.zone.id, ( device || this.device ).id, reading ];
+        return await clientAPI['post /api/homes/{pathParam0}/zones/{pathParam1}/devices/{pathParam2}/addSensorReading'].apply( this, params ); 
+    }
+
     async querySensorReadings( start, end ) {
         if( !this.home ) {
             return{
@@ -520,6 +528,34 @@ class AutoHomeClient extends ClientAPI{
         }
     }
 
+    async queryZoneLogs( start, end ) {
+        if( !this.home || !this.zone ) {
+            return{
+                logs: []
+            };
+        }
+        if( typeof( start ) === 'object' ) {
+            start = start.toISOString();
+        }
+        if( typeof( end ) === 'object' ) {
+            end = end.toISOString();
+        }
+        try {
+            let url = 'post /api/homes/{pathParam0}/zones/{pathParam1}/queryZoneLogs';
+            let params = [ this.home.id, this.zone.id ];
+
+            params.push({
+                start: start,
+                end: ( end || new Date().toISOString() )
+            });
+
+            return await clientAPI[url].apply( this, params ); 
+        } catch( error ) {
+            this.emit( 'apiError', error );
+            throw error;
+        }
+    }
+    
 };
 
 var clientAPI = new AutoHomeClient();

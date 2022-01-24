@@ -112,7 +112,9 @@ module.exports = class ZoneController {
         } else {
             res = res.update( reqContext.requestBody, { returnChanges: 'always' });
         }
+
         res = await res.run();
+        
         zone = res.changes[0].new_val;
         reqContext.extraContext.store.aedes.publish({
             topic: `homes/${zone.home}/zones/${zone.id}/zoneUpdated`,
@@ -125,6 +127,7 @@ module.exports = class ZoneController {
             qos: 1,
             retain: true
         });
+
         return zone;
     }
 
@@ -303,9 +306,135 @@ module.exports = class ZoneController {
     }
 
     static async querySensorReadings( reqContext, home, zone ) {
-        const DeviceController = require( './DeviceController' );
+        const DeviceController = require( './Device' );
         return DeviceController.querySensorReadings( reqContext, home, zone );
     };
+
+    static async addZoneLog( reqContext ) {
+        let zone = await this.getRequestZone( reqContext, false );
+
+        let influx = reqContext.extraContext.store.influx;
+        let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
+        let log = reqContext.requestBody;
+
+        let timestamp = new Date( log.time ).getTime() * 1000000;
+
+        let tags = {
+            zone: zone.id,
+            level: log.level || 'INFO',
+            tag: log.tag || 'NONE'
+        };
+        let fields = {
+            message: log.message || ''
+        };
+
+        await influx.writePoints( [ {
+            measurement: 'zone_logs',
+            tags: tags,
+            fields: fields,
+            timestamp: timestamp
+        }], {
+            database: influxDatabaseName,
+            retentionPolicy: 'weekly_logs',
+            schema: [ {
+                measurement: 'zone_logs',
+                fields: {
+                    message: Influx.FieldType.STRING
+                },
+                tags: [
+                    'zone', 'level', 'tag'
+                ]
+            } ]
+        } );
+    }
+
+    static async queryZoneLogs( reqContext ) {
+        let zone = await this.getRequestZone( reqContext, false );
+
+        let influx = reqContext.extraContext.store.influx;
+        let influxDatabaseName = await HomeController.ensureInfluxDatabase( reqContext );
+        let filter = reqContext.requestBody;
+
+        let query = `select * from "zone_logs" where ` +
+            `time >= ${Influx.escape.stringLit( filter.start )} and ` +
+            `time <= ${Influx.escape.stringLit( filter.end )}`;
+
+        if( zone ) {
+            query = `${query} and zone = ${Influx.escape.stringLit( zone.id )}`;
+        }
+
+        if( filter.tag ) {
+            query = `${query} and tag = ${Influx.escape.stringLit( filter.tag )}`;
+        }
+
+        if( filter.level ) {
+            if( !Array.isArray( filter.level ) ) {
+                filter.level = [ filter.level ];
+            }
+            let taglist = filter.level.map( level => `tag = ${Influx.escape.stringLit( filter.level )}` );
+            query = `${query} and ( ${taglist.join( ' or ' ) } )`;
+        }
+
+        query = `${query} order by time desc`;
+
+        let results = await influx.query( query, {
+            database: influxDatabaseName,
+            retentionPolicy: 'weekly_logs'
+        });
+
+        return{ logs: results.map( log => {
+            return{
+                time: log.time,
+                level: log.level,
+                tag: log.tag,
+                message: log.message
+            };
+        }) };
+    }
+
+    static async addOverride( reqContext, override ) {
+        const DeviceController = require( './Device' );
+        let zone = await this.getRequestZone( reqContext, true );
+        let home = reqContext.home.home;
+
+        override = override || reqContext.requestBody;
+        if( !override.start ) {
+            override.start = new Date().toISOString();
+        }
+        if( !override.end ) {
+            override.end = ( await this.nextScheduleStart( zone, home.timezone, new Date( override.start ) ) ).toISOString();
+        }
+
+        for( let change of override.changes ) {
+            change.device = ( ( await DeviceController.find( reqContext ) ).filter( d => d.id === change.device || d.name === change.device )[0] || {}).id;
+        }
+
+        let overrides = zone.overrides.filter(
+            o => o.name !== override.name
+        );
+
+        overrides.push( override );
+
+        let db = reqContext.extraContext.store.db;
+        let zones = db.table( 'zones' );
+        let res = await zones.get( zone.id ).update({
+            overrides: overrides
+        }, { returnChanges: 'always' }).run();
+
+        zone = res.changes[0].new_val;
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/zoneUpdated`,
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
+            qos: 1
+        });
+        reqContext.extraContext.store.aedes.publish({
+            topic: `homes/${zone.home}/zones/${zone.id}/config`,
+            payload: Buffer.from( JSON.stringify( zone ), 'utf-8' ),
+            qos: 1,
+            retain: true
+        });
+        return zone;
+    }
 
     static async callOperation( reqContext ) {
         let operationName = reqContext.requestObjectPath[reqContext.requestObjectPath.length-1];
@@ -314,32 +443,7 @@ module.exports = class ZoneController {
         let zones = db.table( 'zones' );
 
         if( operationName === 'addOverride' ) {
-            const DeviceController = require( './DeviceController' );
-            let zone = await this.getRequestZone( reqContext, true );
-            let home = reqContext.home.home;
-
-            let override = reqContext.requestBody;
-            if( !override.start ) {
-                override.start = new Date().toISOString();
-            }
-            if( !override.end ) {
-                override.end = ( await this.nextScheduleStart( zone, home.timezone, new Date( override.start ) ) ).toISOString();
-            }
-
-            for( let change of override.changes ) {
-                change.device = ( ( await DeviceController.find( reqContext ) ).filter( d => d.name === change.device )[0] || {}).id;
-            }
-
-            let overrides = zone.overrides.filter(
-                o => o.name !== override.name
-            );
-
-            overrides.push( override );
-
-            await zones.get( zone.id ).update({
-                overrides: overrides
-            }).run();
-            return true;
+            await this.addOverride( zone );
         } else if( operationName === 'cancelOverride' ) {
             let zone = await this.getRequestZone( reqContext, true );
             let home = reqContext.home.home;
@@ -359,6 +463,11 @@ module.exports = class ZoneController {
 
             const DeviceController = require( './Device' );
             return DeviceController.querySensorReadings( reqContext, home.id, zone.id );
+        } else if( operationName === 'addZoneLog' ) {
+            await this.addZoneLog( reqContext );
+            return true;
+        } else if( operationName === 'queryZoneLogs' ) {
+            return this.queryZoneLogs( reqContext );
         }
 
         throw new Error( `Unknown operation ${operationName}` );

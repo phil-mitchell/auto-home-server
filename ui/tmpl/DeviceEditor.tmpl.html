@@ -67,15 +67,15 @@
     <quantity-label
       id="device-current"
       style="width:fit-content;vertical-align:middle"
-      data-quantitytype="type"
-      data-quantity="current.value"
+      data-quantitytype="current[0].type"
+      data-quantity="current[0].value"
       decimal="1">
     </quantity-label>
     <ui5-label style="vertical-align: middle" for="device-updated" show-colon>Last updated</ui5-label>
     <local-datetime-picker
       id="device-updated"
       format-pattern="yyyy-MM-dd HH:mm:ss"
-      data-isotime="current.time"
+      data-isotime="current[0].time"
       readonly>
     </local-datetime-picker>
   </div>
@@ -84,7 +84,7 @@
     <quantity-label
       id="device-target"
       style="width:fit-content;vertical-align:middle"
-      data-quantitytype="type"
+      data-quantitytype="target.type"
       data-quantity="target.value"
       decimal="1">
     </quantity-label>
@@ -95,6 +95,24 @@
       data-isotime="target.until"
       readonly>
     </local-datetime-picker>
+  </div>
+  <div>
+    <ui5-label style="vertical-align: middle" for="override-name-input" show-colon>Override name</ui5-label>
+      <ui5-input
+        id="override-name-input"
+        style="width:fit-content;vertical-align:middle"
+        data-value="override.name"
+        data-readonly="@readonly">
+      </ui5-input>
+    <ui5-label style="vertical-align: middle" for="override-changes-input" show-colon>Changes</ui5-label>
+    <schedule-changes-input
+      id="override-changes-input"
+      style="width:fit-content;vertical-align:middle"
+      data-changes="override.changes"
+      readonly data-show-value-help-icon="@editable"></schedule-changes-input>
+    <ui5-label style="vertical-align: middle" for="override-duration-input" show-colon>for</ui5-label>
+    <quantity-input id="last-input" quantitytype="time" decimal="0" step="1" quantitymin="0" data-quantity="override.duration" data-readonly="@readonly"></quantity-input>
+    </ui5-time-picker>
   </div>
 </ui5-panel>
 <ui5-panel fixed>

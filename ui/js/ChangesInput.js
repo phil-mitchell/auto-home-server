@@ -94,31 +94,38 @@ class ChangesInput extends MultiInput {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
+        if( !this._inited ) {
+            await super.connectedCallback();
 
-        if( !template ) {
-            template = await ( await fetch( './tmpl/ChangesInput.tmpl.html' ) ).text();
+            if( !template ) {
+                template = await ( await fetch( './tmpl/ChangesInput.tmpl.html' ) ).text();
+            }
+
+            var children = document.createElement( 'div' );
+            children.innerHTML = template;
+            
+            this.shadowRoot.appendChild( children );
+
+            let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
+            valueHelp.binding = new Binding( valueHelp, {}, { editable: this.showValueHelpIcon });
+            valueHelp.binding.on( 'change', this.updateValueHelp.bind( this ) );
+
+            valueHelp.querySelector( '#save-change' ).addEventListener( 'click', this.saveValueHelp.bind( this ) );
+            valueHelp.querySelector( '#delete-change' ).addEventListener( 'click', this.deleteValueHelp.bind( this ) );
+
+            this._upgradeProperty( 'changes' );
+            this._upgradeProperty( 'devices' );
+
+            this.addEventListener( 'value-help-trigger', this.openValueHelp.bind( this ) );
+
+            this._inited = true;
         }
-
-        var children = document.createElement( 'div' );
-        children.innerHTML = template;
-        
-        this.shadowRoot.appendChild( children );
-
-        let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
-        valueHelp.binding = new Binding( valueHelp, {}, { editable: this.showValueHelpIcon });
-        valueHelp.binding.on( 'change', this.updateValueHelp.bind( this ) );
-
-        valueHelp.querySelector( '#save-change' ).addEventListener( 'click', this.saveValueHelp.bind( this ) );
-        valueHelp.querySelector( '#delete-change' ).addEventListener( 'click', this.deleteValueHelp.bind( this ) );
-
-        this._upgradeProperty( 'changes' );
-        this._upgradeProperty( 'devices' );
-
-        this.addEventListener( 'value-help-trigger', this.openValueHelp.bind( this ) );
     }
 
     refresh() {
+        if( !this._inited ) {
+            return;
+        }
         for( let item of this.querySelectorAll( '[slot=tokens]' ) ) {
             item.parentNode.removeChild( item );
         }
@@ -179,8 +186,10 @@ class ChangesInput extends MultiInput {
     }
 
     set changes( changes ) {
-        this._changes = changes;
-        this.refresh();
+        if( Array.isArray( changes ) ) {
+            this._changes = changes.filter( change => typeof( change ) === 'object' );
+            this.refresh();
+        }
     }
 
     get changes() {

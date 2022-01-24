@@ -71,28 +71,31 @@ class DeviceChangesInput extends MultiInput {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
+        if( !this._initialized ) {
+            await super.connectedCallback();
 
-        if( !template ) {
-            template = await ( await fetch( './tmpl/DeviceChangesInput.tmpl.html' ) ).text();
-        }
+            if( !template ) {
+                template = await ( await fetch( './tmpl/DeviceChangesInput.tmpl.html' ) ).text();
+            }
 
-        var children = document.createElement( 'div' );
-        children.innerHTML = template;
-        
-        this.shadowRoot.appendChild( children );
+            var children = document.createElement( 'div' );
+            children.innerHTML = template;
+            
+            this.shadowRoot.appendChild( children );
 
-        let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
-        valueHelp.binding = new Binding( valueHelp, {}, { editable: this.showValueHelpIcon });
-        valueHelp.binding.on( 'change', this.updateValueHelp.bind( this ) );
+            let valueHelp = this.shadowRoot.querySelector( '#change-editor' );
+            valueHelp.binding = new Binding( valueHelp, {}, { editable: this.showValueHelpIcon });
+            valueHelp.binding.on( 'change', this.updateValueHelp.bind( this ) );
 
-        valueHelp.querySelector( '#save-change' ).addEventListener( 'click', this.saveValueHelp.bind( this ) );
-        valueHelp.querySelector( '#delete-change' ).addEventListener( 'click', this.deleteValueHelp.bind( this ) );
+            valueHelp.querySelector( '#save-change' ).addEventListener( 'click', this.saveValueHelp.bind( this ) );
+            valueHelp.querySelector( '#delete-change' ).addEventListener( 'click', this.deleteValueHelp.bind( this ) );
 
-        this._upgradeProperty( 'changes' );
-        this._upgradeProperty( 'devices' );
+            this._upgradeProperty( 'changes' );
+            this._upgradeProperty( 'devices' );
 
-        this.addEventListener( 'value-help-trigger', this.openValueHelp.bind( this ) );
+            this.addEventListener( 'value-help-trigger', this.openValueHelp.bind( this ) );
+            this._initialized = true;
+        }        
     }
 
     refresh() {

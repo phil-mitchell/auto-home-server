@@ -423,14 +423,26 @@ aedes.authorizeSubscribe = function( client, subscription, callback ) {
 
 aedes.on( 'publish', ( packet, client ) => {
     if( packet.topic.startsWith( 'homes/' ) && client ) {
-        const DeviceController = require( './controllers/Device' );
-        try {
-            packet.reqContext.requestBody = JSON.parse( packet.payload.toString( 'utf-8' ) );
-            DeviceController.addSensorReading( packet.reqContext ).catch( e => {
-                console.error( `Error writing to topic ${packet.topic}`, e.stack );
-            });
-        } catch( e ) {
-            console.error( e.stack );
+        if( packet.topic.indexOf( '/devices/' ) !== -1 ) {
+            const DeviceController = require( './controllers/Device' );
+            try {
+                packet.reqContext.requestBody = JSON.parse( packet.payload.toString( 'utf-8' ) );
+                DeviceController.addSensorReading( packet.reqContext ).catch( e => {
+                    console.error( `Error writing to topic ${packet.topic}`, e.stack );
+                });
+            } catch( e ) {
+                console.error( e.stack );
+            }
+        } else if( packet.topic.indexOf( '/zones/' ) !== -1 && packet.topic.endsWith( '/log' ) ) {
+            const ZoneController = require( './controllers/Zone' );
+            try {
+                packet.reqContext.requestBody = JSON.parse( packet.payload.toString( 'utf-8' ) );
+                ZoneController.addZoneLog( packet.reqContext ).catch( e => {
+                    console.error( `Error writing to topic ${packet.topic}`, e.stack );
+                });
+            } catch( e ) {
+                console.error( e.stack );
+            }
         }
     }
 });

@@ -46,7 +46,7 @@ class AutoHomeHomeEditor extends BaseEditor {
         let popover = this.shadowRoot.getElementById( 'add-zone-popover' );
         this.clearMessages( popover );
         popover.querySelector( '#nameInput' ).value = '';
-        this.shadowRoot.getElementById( 'add-zone-popover' ).open( this.addZoneButton );
+        this.shadowRoot.getElementById( 'add-zone-popover' ).showAt( this.addZoneButton );
     }
 
     async submitNewZone() {
@@ -161,22 +161,24 @@ class AutoHomeHomeEditor extends BaseEditor {
             template = await ( await fetch( './tmpl/HomeEditor.tmpl.html' ) ).text();
         }
 
-        await super.connectedCallback();
+        if( !this.shadowRoot ) {
+            await super.connectedCallback();
 
-        clientAPI.on( 'zonesChange', this.handleZonesChange.bind( this ) );
-        clientAPI.on( 'membersChange', this.handleMembersChange.bind( this ) );
+            clientAPI.on( 'zonesChange', this.handleZonesChange.bind( this ) );
+            clientAPI.on( 'membersChange', this.handleMembersChange.bind( this ) );
 
-        //this.shadowRoot.getElementById( 'add-member-button' ).addEventListener( 'click', this.inviteMember.bind( this ) );
+            //this.shadowRoot.getElementById( 'add-member-button' ).addEventListener( 'click', this.inviteMember.bind( this ) );
 
-        this.addZoneButton = this.shadowRoot.getElementById( 'add-zone-button' );
-        this.addZoneButton.addEventListener( 'click', this.addZone.bind( this ) );
-        this.shadowRoot.getElementById( 'add-zone-popover-submit' ).addEventListener( 'click', this.submitNewZone.bind( this ) );
-        this.shadowRoot.getElementById( 'zone-search' ).addEventListener( 'input', () => this.handleZonesChange() );
-        
-        this.addMemberButton = this.shadowRoot.getElementById( 'add-member-button' );
-        this.addMemberButton.addEventListener( 'click', this.addMember.bind( this ) );
-        this.shadowRoot.getElementById( 'add-member-popover-submit' ).addEventListener( 'click', this.submitNewMember.bind( this ) );
-        this.shadowRoot.getElementById( 'member-search' ).addEventListener( 'input', () => this.handleMembersChange() );
+            this.addZoneButton = this.shadowRoot.getElementById( 'add-zone-button' );
+            this.addZoneButton.addEventListener( 'click', this.addZone.bind( this ) );
+            this.shadowRoot.getElementById( 'add-zone-popover-submit' ).addEventListener( 'click', this.submitNewZone.bind( this ) );
+            this.shadowRoot.getElementById( 'zone-search' ).addEventListener( 'input', () => this.handleZonesChange() );
+            
+            this.addMemberButton = this.shadowRoot.getElementById( 'add-member-button' );
+            this.addMemberButton.addEventListener( 'click', this.addMember.bind( this ) );
+            this.shadowRoot.getElementById( 'add-member-popover-submit' ).addEventListener( 'click', this.submitNewMember.bind( this ) );
+            this.shadowRoot.getElementById( 'member-search' ).addEventListener( 'input', () => this.handleMembersChange() );
+        }
         
         this.refresh();
     }

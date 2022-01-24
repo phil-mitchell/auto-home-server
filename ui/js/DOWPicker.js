@@ -16,21 +16,24 @@ class DOWPicker extends MultiComboBox {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
+        if( !this._inited ) {
+            this._inited = true;
+            await super.connectedCallback();
 
-        let i = 0;
-        for( let day of DAYS ) {
-            let item = document.createElement( 'ui5-mcb-item' );
-            item.setAttribute( 'id', 'item-day-' + i++ );
-            item.setAttribute( 'text', day );
-            this.appendChild( item );
+            let i = 0;
+            for( let day of DAYS ) {
+                let item = document.createElement( 'ui5-mcb-item' );
+                item.setAttribute( 'id', 'item-day-' + i++ );
+                item.setAttribute( 'text', day );
+                this.appendChild( item );
+            }
+
+            this.addEventListener( 'selection-change', event => {
+                this.fireEvent( 'change', event.data );
+            });
+            
+            this._upgradeProperty( 'days' );
         }
-
-        this.addEventListener( 'selection-change', event => {
-            this.fireEvent( 'change', event.data );
-        });
-        
-        this._upgradeProperty( 'days' );
     }
 
     _upgradeProperty( prop ) {

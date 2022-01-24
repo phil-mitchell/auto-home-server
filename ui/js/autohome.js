@@ -15,36 +15,38 @@ var template = null;
 class AutoHomeApp extends HTMLElement {
     constructor() {
         super();
-
-        this.attachShadow({ mode: 'open' });
     }
 
     async connectedCallback() {
         if( !template ) {
             template = await ( await fetch( './tmpl/AutoHome.tmpl.html' ) ).text();
         }
-        this.shadowRoot.innerHTML = template;
 
-        clientAPI.on( 'profileChange', this.handleProfileChange.bind( this ) );
-        clientAPI.on( 'stateChange', this.updatePage.bind( this ) );
-        clientAPI.on( 'homesChange', this.handleHomesChange.bind( this ) );
+        if( !this.shadowRoot ) {
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.innerHTML = template;
 
-        var shellbar = this.shadowRoot.querySelector( 'ui5-shellbar' );
-        shellbar.addEventListener( 'profileClick', event => {
-            var menu = clientAPI.isLoggedIn() ?
-                this.shadowRoot.querySelector( '#user-menu' ) :
-                this.shadowRoot.querySelector( '#auth-menu' );
-            menu.showAt( event.detail.targetRef );
-        });
-        shellbar.addEventListener( 'menuItemClick', event => {
-            clientAPI.setState( JSON.parse( event.detail.item.dataset.state ) );
-        });
+            clientAPI.on( 'profileChange', this.handleProfileChange.bind( this ) );
+            clientAPI.on( 'stateChange', this.updatePage.bind( this ) );
+            clientAPI.on( 'homesChange', this.handleHomesChange.bind( this ) );
 
-        this.shadowRoot.querySelector( '#auth-google' ).addEventListener( 'click', this.authorizeGoogle.bind( this ) );
-        //this.shadowRoot.querySelector( '#settings-button' ).addEventListener( 'click', this.authorizeGoogle.bind( this ) );
-        this.shadowRoot.querySelector( '#logout-button' ).addEventListener( 'click', this.logout.bind( this ) );
+            var shellbar = this.shadowRoot.querySelector( 'ui5-shellbar' );
+            shellbar.addEventListener( 'profileClick', event => {
+                var menu = clientAPI.isLoggedIn() ?
+                    this.shadowRoot.querySelector( '#user-menu' ) :
+                    this.shadowRoot.querySelector( '#auth-menu' );
+                menu.showAt( event.detail.targetRef );
+            });
+            shellbar.addEventListener( 'menuItemClick', event => {
+                clientAPI.setState( JSON.parse( event.detail.item.dataset.state ) );
+            });
 
-        this.shadowRoot.querySelector( '#back-button' ).addEventListener( 'click', this.goBack.bind( this ) );
+            this.shadowRoot.querySelector( '#auth-google' ).addEventListener( 'click', this.authorizeGoogle.bind( this ) );
+            //this.shadowRoot.querySelector( '#settings-button' ).addEventListener( 'click', this.authorizeGoogle.bind( this ) );
+            this.shadowRoot.querySelector( '#logout-button' ).addEventListener( 'click', this.logout.bind( this ) );
+
+            this.shadowRoot.querySelector( '#back-button' ).addEventListener( 'click', this.goBack.bind( this ) );
+        }
 
         this.handleProfileChange();
     }

@@ -96,6 +96,15 @@ module.exports = class HomeController {
             await influx.createDatabase( influxDatabaseName );
         }
 
+        try {
+            await influx.createRetentionPolicy( 'weekly_logs', {
+                database: influxDatabaseName,
+                duration: '7d',
+                replication: 1
+            });
+        } catch( e ) {
+        }
+
         return influxDatabaseName;
     }
 

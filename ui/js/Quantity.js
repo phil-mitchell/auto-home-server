@@ -52,6 +52,19 @@ var TYPES = [ {
         return value ? 'ON' : 'OFF';
     }
   },  {
+    name: 'button',
+    units: [ {
+        name: '',
+        symbol: '',
+        aliases: [],
+        factor: 1,
+        category: [ 'boolean', 'button' ]
+    } ],
+    base: '',
+    convertToString: function( value ) {
+        return value ? 'PRESSED' : 'RELEASED';
+    }
+  },  {
     name: 'humidity',
     units: [ {
         name: 'percent',

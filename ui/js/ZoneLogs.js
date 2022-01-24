@@ -1,6 +1,3 @@
-import '@ui5/webcomponents/dist/RadioButton.js';
-
-import './HistoryChart.js';
 import './QuantityInput.js';
 
 import clientAPI from './ClientAPI.js';
@@ -9,14 +6,14 @@ import Quantity from './Quantity.js';
 
 var template = null;
 
-class AutoHomeDeviceHistory extends HTMLElement {
+class AutoHomeZoneLogs extends HTMLElement {
     constructor() {
         super();
     }
 
     async connectedCallback() {
         if( !template ) {
-            template = await ( await fetch( './tmpl/DeviceHistory.tmpl.html' ) ).text();
+            template = await ( await fetch( './tmpl/ZoneLogs.tmpl.html' ) ).text();
         }
 
         if( !this.shadowRoot ) {
@@ -29,8 +26,12 @@ class AutoHomeDeviceHistory extends HTMLElement {
             for( let option of this.shadowRoot.querySelectorAll( 'ui5-radio-button' ) ) {
                 option.addEventListener( 'change', this.refresh.bind( this ) );
             }
+
+            clientAPI.on( 'zoneChange', () => {
+                this.refresh();
+            });
         }
-        
+
         this.refresh();
     }
 
@@ -42,27 +43,8 @@ class AutoHomeDeviceHistory extends HTMLElement {
         }
     }
     
-    set devices( value ) {
-        if( !value ) {
-            value = [];
-        }
-        if( !Array.isArray( value ) ) {
-            value = [ value ];
-        }
-        this._devices = value;
-        this.refresh();
-    }
-
-    get devices() {
-        return this._devices;
-    }
-
     async refresh() {
         if( !this.shadowRoot ) {
-            return;
-        }
-        var container = this.shadowRoot.querySelector( 'slot:not([name])' );
-        if( !container ) {
             return;
         }
 
@@ -71,7 +53,7 @@ class AutoHomeDeviceHistory extends HTMLElement {
         let endInput = this.shadowRoot.querySelector( '#end-input' );
 
         if( !lastInput.quantity ) {
-            lastInput.quantity = new Quantity( 'time', 1, 'day' );
+            lastInput.quantity = new Quantity( 'time', 15, 'minute' );
         }
 
         let start = null;
@@ -101,44 +83,12 @@ class AutoHomeDeviceHistory extends HTMLElement {
         startInput.isotime = start;
         endInput.isotime = end;
         
-        let readings = await clientAPI.querySensorReadings( start,  end );
-        let rowTemplate = this.shadowRoot.getElementById( 'device-chart-template' ).content;
-        let rows = container.assignedElements();
+        let logs = await clientAPI.queryZoneLogs( start,  end );
 
-        var rowIdx = 0;
-        for( ; rowIdx < ( readings.readings || [] ).length; ++rowIdx ) {
-            let deviceReadings = readings.readings[rowIdx];
-            let device = ( this.devices || [] ).filter( d => d.id === deviceReadings.sensor )[0] || {};
-            let row = rows[rowIdx];
-            if( row ) {
-                row.binding.update({
-                    start: start,
-                    end: end,
-                    title: `${device.name} - ${deviceReadings.type}`,
-                    readings: [ deviceReadings ]
-                });
-            } else {
-                row = rowTemplate.cloneNode( true ).querySelector( 'div' );
-                row.binding = new Binding( row, {
-                    start: start,
-                    end: end,
-                    title: `${device.name} - ${deviceReadings.type}`,
-                    readings: [ deviceReadings ]
-                }, {
-                    readOnly: true
-                });
-                row.binding.on( 'change', () => {
-                    clientAPI.saveZone();
-                });
-                this.appendChild( row );
-            }
-        }
-
-        for( ; rowIdx < rows.length; ++rowIdx ) {
-            this.removeChild( rows[rowIdx] );
-        }
+        let logText = logs.logs.map( entry => `${ new Date( entry.time ) }\t${entry.level}\t${entry.tag.padEnd( 8 )}\t${entry.message}` ).join( '\n' );
+        this.shadowRoot.querySelector( 'ui5-textarea' ).value = logText;
     }
 }
 
 
-customElements.define( 'autohome-device-history', AutoHomeDeviceHistory );
+customElements.define( 'autohome-zone-logs', AutoHomeZoneLogs );

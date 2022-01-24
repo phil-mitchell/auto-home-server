@@ -1,15 +1,21 @@
 <ui5-bar design="Subheader">
   <div slot="startContent">
-    <ui5-label for="start-input" show-colon>Start</ui5-label>
-    <local-datetime-picker
-      id="start-input"
-      format-pattern="yyyy-MM-dd HH:mm:ss">
-    </local-datetime-picker>
-    <ui5-label for="start-input" show-colon>End</ui5-label>
-    <local-datetime-picker
-      id="end-input"
-      format-pattern="yyyy-MM-dd HH:mm:ss">
-    </local-datetime-picker>
+      <ui5-radio-button text="Last" name="timerange" style="vertical-align:middle" checked></ui5-radio-button>
+      <quantity-input id="last-input" quantitytype="time" decimal="0" step="1"
+      quantitymin="0"></quantity-input>
+
+      <ui5-radio-button text="Absolute" name="timerange" style="vertical-align:middle"></ui5-radio-button>
+      <ui5-label for="start-input" show-colon>Start</ui5-label>
+      <local-datetime-picker
+        id="start-input"
+        format-pattern="yyyy-MM-dd HH:mm:ss">
+      </local-datetime-picker>
+      <ui5-label for="start-input" show-colon>End</ui5-label>
+      <local-datetime-picker
+        id="end-input"
+        format-pattern="yyyy-MM-dd HH:mm:ss">
+      </local-datetime-picker>
+    </div>
   </div>
 </ui5-bar>
 <slot>

@@ -20,17 +20,19 @@ var template = null;
 class AutoHomeScheduleTable extends HTMLElement {
     constructor() {
         super();
-
-        this.shadow = this.attachShadow({ mode: 'open' });
     }
 
     async connectedCallback() {
         if( !template ) {
             template = await ( await fetch( './tmpl/ScheduleTable.tmpl.html' ) ).text();
         }
-        this.shadow.innerHTML = template;
 
-        this._upgradeProperty( 'readonly' );
+        if( !this.shadowRoot ) {
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.innerHTML = template;
+
+            this._upgradeProperty( 'readonly' );
+        }
         this.refresh();
     }
 
@@ -99,6 +101,10 @@ class AutoHomeScheduleTable extends HTMLElement {
     }
     
     async refresh() {
+        if( !this.shadowRoot ) {
+            return;
+        }
+
         var container = this.shadowRoot.querySelector( 'ui5-table' );
         if( !container ) {
             return;

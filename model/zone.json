@@ -220,6 +220,76 @@
                     }
                 }
             }
+        },
+        "addZoneLog": {
+            "summary": "Add a new zone log",
+            "operationId": "addZoneLog",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "time": { "type": "string", "format": "date-time" },
+                    "level": { "type": "string" },
+                    "tag": { "type": "string" },
+                    "message": { "type": "string" }
+                },
+                "required": [ "time", "level", "message" ],
+                "additionalProperties": false
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "success": { "type": "boolean" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "queryZoneLogs": {
+            "summary": "Query zone logs from the given time range",
+            "operationId": "queryZoneLogs",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "start": { "type": "string", "format": "date-time" },
+                    "end": { "type": "string", "format": "date-time" },
+                    "level": { "type": "string" },
+                    "tag": { "type": "string" }
+                },
+                "required": [ "start", "end" ]
+            },
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "logs": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "time": { "type": "string", "format": "date-time" },
+                                                "level": { "type": "string" },
+                                                "tag": { "type": "string" },
+                                                "message": { "type": "string" }
+                                            },
+                                            "required": [ "time", "level", "message" ],
+                                            "additionalProperties": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

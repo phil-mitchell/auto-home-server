@@ -9,20 +9,22 @@ class TZSelect extends Select {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
+        if( !this.shadowRoot ) {
+            await super.connectedCallback();
 
-        if( !timezones ) {
-            timezones = await ( await fetch( 'https://worldtimeapi.org/api/timezone' ) ).json();
+            if( !timezones ) {
+                timezones = await ( await fetch( 'https://worldtimeapi.org/api/timezone' ) ).json();
+            }
+
+            for( let tz of timezones ) {
+                let item = document.createElement( 'ui5-option' );
+                item.appendChild( document.createTextNode( tz ) );
+                item.setAttribute( 'value', tz );
+                this.appendChild( item );
+            }
+
+            this._upgradeProperty( 'value' );
         }
-
-        for( let tz of timezones ) {
-            let item = document.createElement( 'ui5-option' );
-            item.appendChild( document.createTextNode( tz ) );
-            item.setAttribute( 'value', tz );
-            this.appendChild( item );
-        }
-
-        this._upgradeProperty( 'value' );
         this.refresh();
     }
 

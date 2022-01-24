@@ -31,7 +31,7 @@ class QuantityInput extends Input {
             return;
         }
         await this._respPopover();
-        this.responsivePopover.open( this );
+        this.responsivePopover.showAt( this );
     }
 
     async openCalculator( event ) {
@@ -52,35 +52,38 @@ class QuantityInput extends Input {
     }
 
     async connectedCallback() {
-        await super.connectedCallback();
-        this.setAttribute( 'type', 'Number' );
+        if( !this._initialized ) {
+            await super.connectedCallback();
+            this._initialized = true;
+            this.setAttribute( 'type', 'Number' );
 
-        let unit = document.createElement( 'span' );
-        unit.setAttribute( 'slot', 'icon' );
-        unit.setAttribute( 'id', 'unit' );
-        this.appendChild( unit );
+            let unit = document.createElement( 'span' );
+            unit.setAttribute( 'slot', 'icon' );
+            unit.setAttribute( 'id', 'unit' );
+            this.appendChild( unit );
 
-        unit.addEventListener( 'click', this.openUnitSelector.bind( this ) );
+            unit.addEventListener( 'click', this.openUnitSelector.bind( this ) );
 
-        let calculator = document.createElement( 'ui5-button' );
-        calculator.setAttribute( 'slot', 'icon' );
-        calculator.setAttribute( 'id', 'calculator' );
-        calculator.setAttribute( 'icon', 'simulate' );
-        calculator.setAttribute( 'design', 'transparent' );
-        calculator.style['margin-left'] = '10px';
-        this.appendChild( calculator );
-        
-        calculator.addEventListener( 'click', this.openCalculator.bind( this ) );
+            let calculator = document.createElement( 'ui5-button' );
+            calculator.setAttribute( 'slot', 'icon' );
+            calculator.setAttribute( 'id', 'calculator' );
+            calculator.setAttribute( 'icon', 'simulate' );
+            calculator.setAttribute( 'design', 'transparent' );
+            calculator.style['margin-left'] = '10px';
+            this.appendChild( calculator );
+            
+            calculator.addEventListener( 'click', this.openCalculator.bind( this ) );
 
-        this._upgradeProperty( 'quantitytype' );
-        this._upgradeProperty( 'quantitycategory' );
-        this._upgradeProperty( 'unit' );
-        this._upgradeProperty( 'quantity' );
-        this._upgradeProperty( 'quantitymax' );
-        this._upgradeProperty( 'quantitymin' );
-        this._upgradeProperty( 'decimal' );
-        this._upgradeProperty( 'step' );
-        this._upgradeProperty( 'default' );
+            this._upgradeProperty( 'quantitytype' );
+            this._upgradeProperty( 'quantitycategory' );
+            this._upgradeProperty( 'unit' );
+            this._upgradeProperty( 'quantity' );
+            this._upgradeProperty( 'quantitymax' );
+            this._upgradeProperty( 'quantitymin' );
+            this._upgradeProperty( 'decimal' );
+            this._upgradeProperty( 'step' );
+            this._upgradeProperty( 'default' );
+        }
 
         this.refresh();
     }
